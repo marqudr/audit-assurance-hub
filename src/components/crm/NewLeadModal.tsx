@@ -54,6 +54,10 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
   const [state, setState] = useState("");
   const [zip, setZip] = useState("");
 
+  // Regimes
+  const [taxRegime, setTaxRegime] = useState("");
+  const [fiscalRegime, setFiscalRegime] = useState("");
+
   // Contatos
   const [contacts, setContacts] = useState<ContactInput[]>([emptyContact()]);
 
@@ -64,6 +68,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
     setCnpj(""); setCompanyName(""); setCnae(""); setSector("");
     setStreet(""); setNumber(""); setComplement(""); setNeighborhood("");
     setCity(""); setState(""); setZip("");
+    setTaxRegime(""); setFiscalRegime("");
     setContacts([emptyContact()]);
     setEnriched(false);
   };
@@ -127,6 +132,8 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
         address_city: city || undefined,
         address_state: state || undefined,
         address_zip: zip || undefined,
+        tax_regime: taxRegime || undefined,
+        fiscal_regime: fiscalRegime || undefined,
       });
 
       // Criar contatos válidos
@@ -151,7 +158,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Lead</DialogTitle>
         </DialogHeader>
@@ -179,6 +186,16 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
             <div className="space-y-2">
               <Label htmlFor="sector">Setor</Label>
               <Input id="sector" placeholder="Setor de atuação" value={sector} onChange={(e) => setSector(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="taxRegime">Regime Tributário</Label>
+              <Input id="taxRegime" placeholder="Ex: Lucro Real, Simples Nacional..." value={taxRegime} onChange={(e) => setTaxRegime(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fiscalRegime">Regime Fiscal</Label>
+              <Input id="fiscalRegime" placeholder="Ex: Cumulativo, Não-cumulativo..." value={fiscalRegime} onChange={(e) => setFiscalRegime(e.target.value)} />
             </div>
           </div>
 
