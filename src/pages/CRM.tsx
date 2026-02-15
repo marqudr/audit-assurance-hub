@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -10,15 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, DollarSign, TrendingUp, Plus, Eye } from "lucide-react";
+import { Users, DollarSign, TrendingUp, Plus, Eye, LayoutGrid, TableIcon } from "lucide-react";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 import { NewLeadModal } from "@/components/crm/NewLeadModal";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
+import { KanbanBoard } from "@/components/crm/KanbanBoard";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
+  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
+  qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
+  proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
+  fechamento: { label: "Fechamento", className: "bg-green-100 text-green-800 border-green-200" },
+  // Legacy fallbacks
   novo: { label: "Novo", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificado: { label: "Qualificado", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
   ganho: { label: "Ganho", className: "bg-green-100 text-green-800 border-green-200" },
 };
 
@@ -43,8 +50,8 @@ const CRM = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const activeLeads = leads.filter((l) => l.status !== "ganho").length;
-  const totalBudget = leads.reduce((sum, l) => sum + (l.rd_annual_budget || 0), 0);
+  const activeLeads = leads.filter((l) => l.status !== "fechamento" && l.status !== "ganho").length;
+  const totalBudget = leads.reduce((sum, l) => sum + (l.deal_value || l.rd_annual_budget || 0), 0);
   const avgDeal = leads.length > 0 ? totalBudget / leads.length : 0;
 
   const formatMetric = (val: number) => {
@@ -105,79 +112,99 @@ const CRM = () => {
         </Card>
       </div>
 
-      {/* Tabela de Leads */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Empresa</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>CNAE</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Última Atualização</TableHead>
-                <TableHead className="w-[100px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Carregando leads...
-                  </TableCell>
-                </TableRow>
-              ) : leads.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Nenhum lead cadastrado. Clique em "Novo Lead" para começar.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                leads.map((lead) => {
-                  const status = statusConfig[lead.status] || statusConfig.novo;
-                  return (
-                    <TableRow
-                      key={lead.id}
-                      className="group cursor-pointer"
-                      onClick={() => { setSelectedLead(lead); setSheetOpen(true); }}
-                    >
-                      <TableCell className="font-medium">{lead.company_name}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs font-mono">
-                        {formatCnpj(lead.cnpj)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {lead.cnae || "—"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={status.className}>
-                          {status.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {formatDate(lead.updated_at)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedLead(lead);
-                            setSheetOpen(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
-                        </Button>
+      {/* Tabs: Tabela | Pipeline */}
+      <Tabs defaultValue="pipeline">
+        <TabsList>
+          <TabsTrigger value="tabela" className="gap-1.5">
+            <TableIcon className="h-4 w-4" /> Tabela
+          </TabsTrigger>
+          <TabsTrigger value="pipeline" className="gap-1.5">
+            <LayoutGrid className="h-4 w-4" /> Pipeline
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pipeline">
+          <KanbanBoard
+            leads={leads}
+            onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }}
+          />
+        </TabsContent>
+
+        <TabsContent value="tabela">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>CNAE</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Última Atualização</TableHead>
+                    <TableHead className="w-[100px]" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Carregando leads...
                       </TableCell>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  ) : leads.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Nenhum lead cadastrado. Clique em "Novo Lead" para começar.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    leads.map((lead) => {
+                      const status = statusConfig[lead.status] || statusConfig.prospeccao;
+                      return (
+                        <TableRow
+                          key={lead.id}
+                          className="group cursor-pointer"
+                          onClick={() => { setSelectedLead(lead); setSheetOpen(true); }}
+                        >
+                          <TableCell className="font-medium">{lead.company_name}</TableCell>
+                          <TableCell className="text-muted-foreground text-xs font-mono">
+                            {formatCnpj(lead.cnpj)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">
+                            {lead.cnae || "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={status.className}>
+                              {status.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs">
+                            {formatDate(lead.updated_at)}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLead(lead);
+                                setSheetOpen(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <NewLeadModal open={modalOpen} onOpenChange={setModalOpen} />
       <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} />

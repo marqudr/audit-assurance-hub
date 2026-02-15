@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, MapPin, User, Pencil, X, Check } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
+import { PhaseChecklist } from "./PhaseChecklist";
 import { formatPhone, formatBRL } from "./NewLeadModal";
 import { useLeadContacts, useCreateLeadContact, useDeleteLeadContact, useUpdateLead, type Lead, type LeadStatus } from "@/hooks/useLeads";
 import { toast } from "sonner";
@@ -24,9 +25,13 @@ interface LeadDetailSheetProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
+  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
+  qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
+  proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
+  fechamento: { label: "Fechamento", className: "bg-green-100 text-green-800 border-green-200" },
   novo: { label: "Novo", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificado: { label: "Qualificado", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
   ganho: { label: "Ganho", className: "bg-green-100 text-green-800 border-green-200" },
 };
 
@@ -212,15 +217,16 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={editData.status} onValueChange={(v) => setEditData({ ...editData, status: v as LeadStatus })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="novo">Novo</SelectItem>
-                      <SelectItem value="qualificado">Qualificado</SelectItem>
-                      <SelectItem value="proposta">Proposta</SelectItem>
-                      <SelectItem value="ganho">Ganho</SelectItem>
-                    </SelectContent>
-                  </Select>
+                   <Select value={editData.status} onValueChange={(v) => setEditData({ ...editData, status: v as LeadStatus })}>
+                     <SelectTrigger><SelectValue /></SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="prospeccao">Prospecção</SelectItem>
+                       <SelectItem value="qualificacao">Qualificação</SelectItem>
+                       <SelectItem value="diagnostico">Diagnóstico</SelectItem>
+                       <SelectItem value="proposta">Proposta</SelectItem>
+                       <SelectItem value="fechamento">Fechamento</SelectItem>
+                     </SelectContent>
+                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>CNAE</Label>
@@ -347,6 +353,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               </div>
             )}
           </div>
+
+          <Separator />
+          <PhaseChecklist leadId={lead.id} phase={lead.status} />
 
           <Separator />
           <TaxSimulator lead={lead} />
