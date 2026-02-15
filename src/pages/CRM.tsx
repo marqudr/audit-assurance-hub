@@ -1,82 +1,186 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, DollarSign, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Users, DollarSign, TrendingUp, Plus, Eye } from "lucide-react";
+import { useLeads, type Lead } from "@/hooks/useLeads";
+import { NewLeadModal } from "@/components/crm/NewLeadModal";
+import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
 
-const stages = ["Prospect", "Qualified", "Proposal", "Negotiation", "Won", "Handover"];
+const statusConfig: Record<string, { label: string; className: string }> = {
+  novo: { label: "Novo", className: "bg-blue-100 text-blue-800 border-blue-200" },
+  qualificado: { label: "Qualificado", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
+  ganho: { label: "Ganho", className: "bg-green-100 text-green-800 border-green-200" },
+};
 
-const leads = [
-  { id: 1, company: "MegaCorp Ltda", value: "R$ 450K", stage: "Prospect", complexity: "High" },
-  { id: 2, company: "Industria Beta", value: "R$ 280K", stage: "Prospect", complexity: "Medium" },
-  { id: 3, company: "TechServ S.A.", value: "R$ 620K", stage: "Qualified", complexity: "High" },
-  { id: 4, company: "Retail Alpha", value: "R$ 180K", stage: "Qualified", complexity: "Low" },
-  { id: 5, company: "FinanceGroup", value: "R$ 890K", stage: "Proposal", complexity: "High" },
-  { id: 6, company: "LogisTech", value: "R$ 320K", stage: "Negotiation", complexity: "Medium" },
-  { id: 7, company: "EnergyPlus", value: "R$ 1.2M", stage: "Negotiation", complexity: "High" },
-  { id: 8, company: "DataCorp", value: "R$ 550K", stage: "Won", complexity: "Medium" },
-  { id: 9, company: "BioHealth", value: "R$ 750K", stage: "Won", complexity: "High" },
-  { id: 10, company: "AutoParts Inc", value: "R$ 190K", stage: "Handover", complexity: "Low" },
-];
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatCnpj(cnpj: string | null) {
+  if (!cnpj) return "—";
+  const d = cnpj.replace(/\D/g, "");
+  if (d.length !== 14) return cnpj;
+  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+}
 
 const CRM = () => {
+  const { data: leads = [], isLoading } = useLeads();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const activeLeads = leads.filter((l) => l.status !== "ganho").length;
+  const totalBudget = leads.reduce((sum, l) => sum + (l.rd_annual_budget || 0), 0);
+  const avgDeal = leads.length > 0 ? totalBudget / leads.length : 0;
+
+  const formatMetric = (val: number) => {
+    if (val >= 1_000_000) return `R$ ${(val / 1_000_000).toFixed(1).replace(".", ",")}M`;
+    if (val >= 1_000) return `R$ ${(val / 1_000).toFixed(0)}K`;
+    return `R$ ${val.toFixed(0)}`;
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">CRM Pipeline</h1>
-        <p className="text-sm text-muted-foreground">Sales pipeline and lead management</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">CRM — Vendas & Originação</h1>
+          <p className="text-sm text-muted-foreground">Pipeline de vendas e gestão de leads</p>
+        </div>
+        <Button onClick={() => setModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Novo Lead
+        </Button>
       </div>
 
-      {/* Stage summary */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-2">
-        {stages.map((stage, i) => (
-          <div key={stage} className="flex items-center">
-            <div className="px-3 py-1.5 rounded-md bg-card border text-xs font-medium whitespace-nowrap">
-              {stage}
-              <Badge variant="secondary" className="ml-2 text-[10px] px-1.5">
-                {leads.filter((l) => l.stage === stage).length}
-              </Badge>
+      {/* Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="rounded-full bg-primary/10 p-2">
+              <Users className="h-5 w-5 text-primary" />
             </div>
-            {i < stages.length - 1 && <ArrowRight className="h-3 w-3 mx-1 text-muted-foreground shrink-0" />}
-          </div>
-        ))}
+            <div>
+              <p className="text-xs text-muted-foreground">Leads Ativos</p>
+              <p className="text-2xl font-bold">{isLoading ? "—" : activeLeads}</p>
+            </div>
+            <Badge variant="secondary" className="ml-auto text-xs">
+              <TrendingUp className="h-3 w-3 mr-1" /> +5%
+            </Badge>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="rounded-full bg-primary/10 p-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Receita Potencial</p>
+              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(totalBudget)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="rounded-full bg-primary/10 p-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Ticket Médio</p>
+              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(avgDeal)}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Kanban Board */}
-      <div className="grid grid-cols-6 gap-3 overflow-x-auto min-w-[900px]">
-        {stages.map((stage) => (
-          <div key={stage} className="space-y-2">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              {stage}
-            </div>
-            {leads
-              .filter((l) => l.stage === stage)
-              .map((lead) => (
-                <Card key={lead.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardContent className="p-3 space-y-2">
-                    <p className="text-sm font-medium leading-tight">{lead.company}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {lead.value}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] ${
-                          lead.complexity === "High"
-                            ? "border-danger/30 text-danger"
-                            : lead.complexity === "Medium"
-                            ? "border-warning/30 text-warning"
-                            : "border-success/30 text-success"
-                        }`}
-                      >
-                        {lead.complexity}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        ))}
-      </div>
+      {/* Tabela de Leads */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Empresa</TableHead>
+                <TableHead>CNPJ</TableHead>
+                <TableHead>CNAE</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Última Atualização</TableHead>
+                <TableHead className="w-[100px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Carregando leads...
+                  </TableCell>
+                </TableRow>
+              ) : leads.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhum lead cadastrado. Clique em "Novo Lead" para começar.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                leads.map((lead) => {
+                  const status = statusConfig[lead.status] || statusConfig.novo;
+                  return (
+                    <TableRow
+                      key={lead.id}
+                      className="group cursor-pointer"
+                      onClick={() => { setSelectedLead(lead); setSheetOpen(true); }}
+                    >
+                      <TableCell className="font-medium">{lead.company_name}</TableCell>
+                      <TableCell className="text-muted-foreground text-xs font-mono">
+                        {formatCnpj(lead.cnpj)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {lead.cnae || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={status.className}>
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {formatDate(lead.updated_at)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedLead(lead);
+                            setSheetOpen(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <NewLeadModal open={modalOpen} onOpenChange={setModalOpen} />
+      <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
 };
