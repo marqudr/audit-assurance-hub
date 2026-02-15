@@ -16,6 +16,10 @@ import { useLeads, type Lead } from "@/hooks/useLeads";
 import { NewLeadModal } from "@/components/crm/NewLeadModal";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
 import { KanbanBoard } from "@/components/crm/KanbanBoard";
+import { CrmActionAlerts } from "@/components/crm/CrmActionAlerts";
+import { CrmPipelineMetrics } from "@/components/crm/CrmPipelineMetrics";
+import { CrmEnergyMetrics } from "@/components/crm/CrmEnergyMetrics";
+import { CrmRecentActivity } from "@/components/crm/CrmRecentActivity";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
@@ -73,6 +77,16 @@ const CRM = () => {
           <Plus className="mr-2 h-4 w-4" /> Novo Lead
         </Button>
       </div>
+
+      {/* Dashboard Operacional */}
+      <CrmActionAlerts leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CrmPipelineMetrics leads={leads} />
+        <CrmEnergyMetrics leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
+      </div>
+
+      <CrmRecentActivity leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
 
       {/* Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
