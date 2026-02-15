@@ -226,9 +226,12 @@ export type Database = {
           has_timeline: boolean
           icp_score: number | null
           id: string
+          last_activity_type: string | null
+          last_contacted_date: string | null
           last_touch_channel: string | null
           next_action: string | null
           next_action_date: string | null
+          next_activity_date: string | null
           objection: string | null
           pain_points: string | null
           probability: number | null
@@ -271,9 +274,12 @@ export type Database = {
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
+          last_activity_type?: string | null
+          last_contacted_date?: string | null
           last_touch_channel?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          next_activity_date?: string | null
           objection?: string | null
           pain_points?: string | null
           probability?: number | null
@@ -316,9 +322,12 @@ export type Database = {
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
+          last_activity_type?: string | null
+          last_contacted_date?: string | null
           last_touch_channel?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          next_activity_date?: string | null
           objection?: string | null
           pain_points?: string | null
           probability?: number | null

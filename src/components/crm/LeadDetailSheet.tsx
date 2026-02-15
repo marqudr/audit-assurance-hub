@@ -103,6 +103,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         next_action: lead.next_action || "",
         next_action_date: lead.next_action_date ? new Date(lead.next_action_date) : undefined,
         content_consumed: lead.content_consumed || "",
+        last_contacted_date: lead.last_contacted_date ? new Date(lead.last_contacted_date) : undefined,
+        last_activity_type: lead.last_activity_type || "",
+        next_activity_date: lead.next_activity_date ? new Date(lead.next_activity_date) : undefined,
         estimated_ltv: lead.estimated_ltv ? formatBRL(String(Math.round(lead.estimated_ltv * 100))) : "",
         probability: lead.probability ?? 50,
         deal_value: lead.deal_value ? formatBRL(String(Math.round(lead.deal_value * 100))) : "",
@@ -168,6 +171,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         next_action: editData.next_action || null,
         next_action_date: editData.next_action_date ? editData.next_action_date.toISOString() : null,
         content_consumed: editData.content_consumed || null,
+        last_contacted_date: editData.last_contacted_date ? editData.last_contacted_date.toISOString() : null,
+        last_activity_type: editData.last_activity_type || null,
+        next_activity_date: editData.next_activity_date ? editData.next_activity_date.toISOString() : null,
         // Revenue
         estimated_ltv: editData.estimated_ltv ? parseBRL(editData.estimated_ltv) : null,
         probability: editData.probability,
@@ -555,7 +561,22 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                   <span className="font-medium">{format(new Date(lead.next_action_date), "dd/MM/yyyy")}</span>
                 </div>
               )}
-              <div><span className="text-muted-foreground">Conteúdo Consumido</span><p className="font-medium text-sm mt-1">{lead.content_consumed || "—"}</p></div>
+              <Separator />
+              <h4 className="text-sm font-semibold">Histórico de Interações</h4>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Último Contato</span>
+                <span className="font-medium">{lead.last_contacted_date ? format(new Date(lead.last_contacted_date), "dd/MM/yyyy") : "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Tipo de Atividade</span>
+                <span className="font-medium">{lead.last_activity_type === "email" ? "E-mail" : lead.last_activity_type === "reuniao" ? "Reunião" : lead.last_activity_type === "ligacao" ? "Ligação" : lead.last_activity_type || "—"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Próxima Atividade</span>
+                <span className="font-medium">{lead.next_activity_date ? format(new Date(lead.next_activity_date), "dd/MM/yyyy") : "—"}</span>
+              </div>
+              <Separator />
+              <div><span className="text-muted-foreground">Notas</span><p className="font-medium text-sm mt-1">{lead.content_consumed || "—"}</p></div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -574,10 +595,48 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                       {editData.next_action_date ? format(editData.next_action_date, "dd/MM/yyyy") : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date} onSelect={(d) => ed("next_action_date", d)} locale={ptBR} /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date} onSelect={(d) => ed("next_action_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
                 </Popover>
               </div>
-              <div className="space-y-1"><Label className="text-xs">Conteúdo Consumido</Label><Textarea value={editData.content_consumed} onChange={(e) => ed("content_consumed", e.target.value)} placeholder="Whitepapers, webinars..." rows={2} /></div>
+              <Separator />
+              <h4 className="text-sm font-semibold">Histórico de Interações</h4>
+              <div className="space-y-1">
+                <Label className="text-xs">Último Contato</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.last_contacted_date && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editData.last_contacted_date ? format(editData.last_contacted_date, "dd/MM/yyyy") : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.last_contacted_date} onSelect={(d) => ed("last_contacted_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Tipo de Atividade</Label>
+                <Select value={editData.last_activity_type} onValueChange={(v) => ed("last_activity_type", v)}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">E-mail</SelectItem>
+                    <SelectItem value="reuniao">Reunião</SelectItem>
+                    <SelectItem value="ligacao">Ligação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Próxima Atividade</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.next_activity_date && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editData.next_activity_date ? format(editData.next_activity_date, "dd/MM/yyyy") : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_activity_date} onSelect={(d) => ed("next_activity_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
+                </Popover>
+              </div>
+              <Separator />
+              <div className="space-y-1"><Label className="text-xs">Notas</Label><Textarea value={editData.content_consumed} onChange={(e) => ed("content_consumed", e.target.value)} placeholder="Anotações sobre o lead..." rows={3} /></div>
             </div>
           )}
         </div>
