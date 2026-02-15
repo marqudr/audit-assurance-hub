@@ -1,154 +1,72 @@
 
-# Arquitetura 1:N - Empresas e Projetos no CRM
 
-## Visao Geral
+## Plano: ICP Score por Elegibilidade + Filtro de Merito Tecnologico (Frascati)
 
-Refatorar o CRM para separar a entidade **Empresa** (conta/account) da entidade **Projeto** (oportunidade/opportunity), criando uma relacao 1:N onde uma Empresa pode ter multiplos Projetos. O pipeline de vendas passara a rastrear Projetos, nao Empresas.
+### Resumo
 
-## Mudancas no Banco de Dados
+O ICP Score deixara de ser um slider manual e passara a ser calculado automaticamente com base em 4 criterios de elegibilidade da empresa (Lei do Bem). Na fase de Qualificacao, o projeto precisara passar por um filtro baseado nos 5 pilares do Manual de Frascati. Ambos serao apresentados visualmente com checkboxes e score calculado.
 
-### 1. Nova tabela `projects`
+---
 
-Campos do projeto (oportunidade):
-- `id` UUID (PK)
-- `lead_id` UUID (FK para leads, NOT NULL, ON DELETE CASCADE)
-- `user_id` UUID (NOT NULL)
-- `name` TEXT (NOT NULL) - Nome do Projeto
-- `description` TEXT - Descricao do Projeto
-- `status` lead_status (default 'prospeccao') - Status do pipeline (movido do lead)
-- `deal_value` NUMERIC
-- `probability` INTEGER
-- `expected_close_date` DATE
-- `estimated_benefit_min` / `estimated_benefit_max` NUMERIC
-- `engineering_headcount` INTEGER
-- `rd_annual_budget` NUMERIC
-- `icp_score` INTEGER
-- `has_budget` / `has_authority` / `has_need` / `has_timeline` BOOLEAN
-- `pain_points` / `context` / `objection` TEXT
-- `qualification_method` TEXT
-- `next_action` / `next_action_date` TEXT/TIMESTAMP
-- `last_contacted_date` / `last_activity_type` / `next_activity_date` TIMESTAMP/TEXT
-- `content_consumed` TEXT
-- `estimated_ltv` NUMERIC
-- `source_medium` / `first_touch_channel` / `last_touch_channel` TEXT
-- `estimated_cac` NUMERIC
-- `created_at` / `updated_at` TIMESTAMPS
+### 1. Alteracoes no Banco de Dados
 
-### 2. Nova tabela `project_attachments`
+**Tabela `leads`** -- adicionar 2 campos booleanos (o regime tributario ja existe como `tax_regime`, e investimento em P&D pode ser derivado de `rd_annual_budget`):
 
-- `id` UUID (PK)
-- `project_id` UUID (FK para projects, ON DELETE CASCADE)
-- `user_id` UUID (NOT NULL)
-- `file_name` TEXT (NOT NULL)
-- `file_size` BIGINT
-- `storage_path` TEXT (NOT NULL)
-- `phase` lead_status - Fase do funil em que o arquivo foi anexado
-- `created_at` TIMESTAMP
+- `has_lucro_fiscal` (boolean, default false) -- Resultado Fiscal positivo no ano-base
+- `has_regularidade_fiscal` (boolean, default false) -- CND ou CPEND ativa
 
-### 3. Storage bucket `project-files`
+**Tabela `projects`** -- adicionar 5 campos booleanos para os pilares de Frascati:
 
-Bucket privado para armazenar os anexos dos projetos.
+- `frascati_novidade` (boolean, default false)
+- `frascati_criatividade` (boolean, default false)
+- `frascati_incerteza` (boolean, default false)
+- `frascati_sistematicidade` (boolean, default false)
+- `frascati_transferibilidade` (boolean, default false)
 
-### 4. Simplificacao da tabela `leads`
+### 2. Calculo Automatico do ICP Score (Prospeccao)
 
-A tabela `leads` mantera apenas dados da **Empresa**:
-- Campos que permanecem: `id`, `user_id`, `company_name`, `cnpj`, `cnae`, `sector`, `revenue_range`, endereco, regimes tributarios, `created_at`, `updated_at`
-- Campos que migram para `projects`: `status`, `deal_value`, `probability`, `expected_close_date`, ICP, BANT, qualificacao, velocidade, interacao, receita, atribuicao, simulacao fiscal
+O ICP Score sera calculado no frontend com base em 4 criterios, cada um valendo 2,5 pontos (total maximo = 10):
 
-**IMPORTANTE**: Nao vamos deletar colunas da tabela leads nesta fase. Vamos apenas criar a nova estrutura e migrar a logica. A limpeza das colunas legadas sera feita em uma fase posterior, apos validacao.
+| Criterio | Fonte | Pontos |
+|---|---|---|
+| Regime Tributario = Lucro Real | `leads.tax_regime` | 2,5 |
+| Resultado Fiscal positivo | `leads.has_lucro_fiscal` | 2,5 |
+| Regularidade Fiscal (CND/CPEND) | `leads.has_regularidade_fiscal` | 2,5 |
+| Investimento em P&D comprovado | `leads.rd_annual_budget > 0` | 2,5 |
 
-### 5. Migrar `lead_checklist_items`
+- O slider manual de ICP Score sera substituido por checkboxes em modo edicao
+- O score sera exibido como badge colorida (0-5 vermelho, 5-7.5 amarelo, 7.5-10 verde)
+- O calculo acontecera no momento do save e sera persistido em `leads.icp_score` (e propagado para `projects.icp_score`)
 
-Adicionar coluna `project_id` (FK para projects) a tabela existente, tornando-a a referencia principal no lugar de `lead_id`.
+### 3. Filtro de Merito Tecnologico (Qualificacao)
 
-### 6. RLS Policies
+Na secao de Qualificacao do ProjectDetailSheet, uma nova sub-secao "Merito Tecnologico (Frascati)" exibira 5 checkboxes:
 
-- `projects`: CRUD restrito a `user_id = auth.uid()`, SELECT com admin via `has_role`
-- `project_attachments`: CRUD via join com projects.user_id
-- Storage policies para o bucket `project-files`
+- Novidade: "O projeto visa resultados novos para a empresa ou mercado"
+- Criatividade: "Baseia-se em conceitos originais e nao obvios"
+- Incerteza: "Ha duvida se o resultado e alcancavel com o conhecimento atual"
+- Sistematicidade: "Possui planejamento, orcamento, metodologia e registros"
+- Transferibilidade: "O conhecimento gerado pode ser codificado e transferido"
 
-### 7. Integridade Referencial
+Score Frascati exibido como "X/5" com badge colorida. Este filtro sera visivel tanto em modo leitura quanto edicao.
 
-- `projects.lead_id` ON DELETE CASCADE: ao deletar Empresa, todos os Projetos sao removidos
-- `project_attachments.project_id` ON DELETE CASCADE: ao deletar Projeto, anexos sao removidos
-- Deletar um Projeto NAO afeta a Empresa
+### 4. Arquivos Modificados
 
-## Mudancas no Frontend
+- **Migracao SQL**: Adicionar colunas nas tabelas `leads` e `projects`
+- **`src/hooks/useLeads.ts`**: Adicionar campos `has_lucro_fiscal`, `has_regularidade_fiscal` ao tipo Lead
+- **`src/hooks/useProjects.ts`**: Adicionar campos `frascati_*` ao tipo Project
+- **`src/components/crm/LeadDetailSheet.tsx`**: Substituir slider ICP por checkboxes de elegibilidade com calculo automatico
+- **`src/components/crm/ProjectDetailSheet.tsx`**:
+  - Substituir slider ICP por exibicao do score calculado da empresa
+  - Adicionar secao "Merito Tecnologico" com checkboxes Frascati na area de Qualificacao
+  - Salvar campos `frascati_*` no handleSaveEdit
+- **`src/hooks/useLeadChecklist.ts`**: Atualizar checklist de prospeccao para incluir item "ICP Score >= 7,5" e checklist de qualificacao para incluir "Filtro Frascati completo (5/5)"
 
-### Hooks Novos
+### 5. Experiencia do Usuario
 
-**`src/hooks/useProjects.ts`**
-- `useProjects(leadId?)` - Lista projetos (todos ou filtrados por empresa)
-- `useProject(projectId)` - Detalhe de um projeto
-- `useCreateProject()` - Criar projeto vinculado a uma empresa
-- `useUpdateProject()` - Atualizar projeto
-- `useDeleteProject()` - Deletar projeto
+- Ao abrir a ficha da empresa, o consultor ve os 4 criterios de elegibilidade com checkboxes
+- O ICP Score e recalculado automaticamente ao marcar/desmarcar criterios
+- Na ficha do projeto (fase Qualificacao), o consultor avalia os 5 pilares de Frascati
+- O pipeline so permite avancar de Prospeccao se ICP >= 7,5 (via checklist gate)
+- O pipeline so permite avancar de Qualificacao se Frascati = 5/5 (via checklist gate)
 
-**`src/hooks/useProjectAttachments.ts`**
-- `useProjectAttachments(projectId)` - Lista anexos de um projeto
-- `useCompanyAttachments(leadId)` - Rollup de todos os anexos de todos os projetos de uma empresa
-- `useUploadAttachment()` - Upload de arquivo
-- `useDeleteAttachment()` - Remover arquivo
-
-### Refatoracao de Componentes
-
-**Pipeline/Kanban** - Agora rastreia Projetos:
-- `KanbanBoard.tsx`: recebe `projects` em vez de `leads`. Cards exibem nome do projeto + nome da empresa
-- `KanbanCard.tsx`: refatorado para exibir dados do projeto (nome, empresa, deal_value, probabilidade, checklist)
-- `KanbanColumn.tsx`: mesma estrutura, dados de projetos
-
-**Detalhes** - Dois niveis:
-- `LeadDetailSheet.tsx` (Empresa): Dados cadastrais, contatos, lista de projetos vinculados, visao consolidada de anexos (rollup)
-- `ProjectDetailSheet.tsx` (novo): Pipeline status, qualificacao, BANT, simulacao fiscal, checklist, velocidade, anexos do projeto, historico de interacoes
-
-**Modais**:
-- `NewLeadModal.tsx`: Mantem apenas campos da empresa (CNPJ, razao social, endereco, regimes). Opcao de criar primeiro projeto junto
-- `NewProjectModal.tsx` (novo): Criacao de projeto vinculado a uma empresa existente (nome, descricao, deal_value inicial)
-
-**Dashboard CRM**:
-- `CrmActionAlerts.tsx`: Alertas baseados em projetos (sem contato, atrasados, parados)
-- `CrmPipelineMetrics.tsx`: Pipeline baseado em projetos
-- `CrmEnergyMetrics.tsx`: Top projetos por ICP, conversao, idade media
-- `CrmRecentActivity.tsx`: Interacoes baseadas em projetos
-
-**Tabela CRM**:
-- Adicionar coluna "Empresa" e exibir projetos na tabela, agrupados ou com referencia a empresa
-
-**Anexos**:
-- `ProjectAttachments.tsx` (novo): Componente de upload/listagem de anexos dentro do detalhe do projeto
-- `CompanyAttachmentsRollup.tsx` (novo): Visao consolidada na empresa, mostrando todos os arquivos de todos os projetos
-
-### Pagina CRM (`src/pages/CRM.tsx`)
-
-- Metricas calculadas sobre projetos (nao leads)
-- Pipeline Kanban opera sobre projetos
-- Tabela lista projetos com coluna de empresa
-- Click em card abre `ProjectDetailSheet`
-- Possibilidade de navegar do projeto para a empresa
-
-## Estrategia de Migracao de Dados
-
-A migracao SQL criara um projeto para cada lead existente que tenha status de pipeline ativo, copiando os campos relevantes. Leads sem atividade de pipeline manterao apenas dados de empresa.
-
-```text
-Para cada lead existente:
-  1. Criar um projeto com os campos de pipeline/qualificacao/receita
-  2. Migrar checklist_items para referenciar o novo project_id
-  3. Manter o lead com dados de empresa apenas
-```
-
-## Sequencia de Implementacao
-
-1. Migracoes SQL (tabelas, bucket, RLS, migracao de dados)
-2. Tipos TypeScript e hooks (`useProjects`, `useProjectAttachments`)
-3. Componentes novos (`ProjectDetailSheet`, `NewProjectModal`, `ProjectAttachments`, `CompanyAttachmentsRollup`)
-4. Refatorar componentes existentes (Kanban, Dashboard, CRM page, LeadDetailSheet)
-5. Ajustar alertas, metricas e atividade recente para usar projetos
-
-## Detalhes Tecnicos
-
-- **Storage**: Bucket privado `project-files` com paths `{user_id}/{project_id}/{filename}`
-- **Rollup de anexos**: Query via join `project_attachments JOIN projects ON project_id WHERE projects.lead_id = ?`
-- **Cascata**: `ON DELETE CASCADE` garante integridade. Deleção de empresa remove projetos e anexos. Deleção de projeto remove apenas seus anexos
-- **Compatibilidade**: Colunas legadas no `leads` nao serao removidas nesta fase, evitando quebras
-- **Performance**: Projetos carregados com `lead_id` como filtro quando necessario; anexos carregados sob demanda
