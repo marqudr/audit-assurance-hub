@@ -382,35 +382,6 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                         Score: {calcEditFrascatiScore()}/5
                       </Badge>
                     </div>
-                    <Separator />
-                    <div className="space-y-1">
-                      <Label className="text-xs">Método de Qualificação</Label>
-                      <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>
-                        <SelectTrigger><SelectValue placeholder="Selecione um método" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="BANT">Orçamento, Decisor, Necessidade e Prazo</SelectItem>
-                          <SelectItem value="ANUM">Autoridade, Necessidade, Urgência e Dinheiro</SelectItem>
-                          <SelectItem value="MEDDIC">Métricas, Decisor e Critérios de Decisão</SelectItem>
-                          <SelectItem value="SPIN">Situação, Problema, Implicação e Solução</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">BANT</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { key: "has_budget", label: "Budget" },
-                          { key: "has_authority", label: "Authority" },
-                          { key: "has_need", label: "Need" },
-                          { key: "has_timeline", label: "Timeline" },
-                        ].map(({ key, label }) => (
-                          <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                            <Checkbox checked={editData[key]} onCheckedChange={(v) => ed(key, !!v)} />
-                            {label}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
                     <div className="space-y-1"><Label className="text-xs">Dor</Label><Textarea value={editData.pain_points} onChange={(e) => ed("pain_points", e.target.value)} rows={3} /></div>
                     <div className="space-y-1"><Label className="text-xs">Contexto</Label><Textarea value={editData.context} onChange={(e) => ed("context", e.target.value)} rows={3} /></div>
                     <div className="space-y-1"><Label className="text-xs">Objeção</Label><Textarea value={editData.objection} onChange={(e) => ed("objection", e.target.value)} rows={3} /></div>
