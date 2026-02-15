@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, Paperclip, Bot, User, Loader2, FileText, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -255,7 +256,13 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName, ag
                   : "bg-muted"
               )}
             >
-              {msg.content}
+              {msg.role === "user" ? (
+                msg.content
+              ) : (
+                <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                </div>
+              )}
               {msg.role === "assistant" && isLoading && i === messages.length - 1 && (
                 <span className="inline-block w-1.5 h-4 ml-0.5 bg-current animate-pulse rounded-sm" />
               )}
