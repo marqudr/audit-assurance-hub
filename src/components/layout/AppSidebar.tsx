@@ -4,23 +4,39 @@ import {
   Users,
   FolderKanban,
   Bot,
+  MessageSquare,
   Settings,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
+import { useIsAdmin } from "@/hooks/useUserRole";
 
-const navItems = [
+const baseNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "CRM", url: "/crm", icon: Users },
   { title: "Operations", url: "/operations", icon: FolderKanban },
+  { title: "Agent Space", url: "/agent-space", icon: MessageSquare },
+];
+
+const adminNavItems = [
   { title: "Agent Studio", url: "/agent-studio", icon: Bot },
+];
+
+const bottomNavItems = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const { hasRole: isAdmin } = useIsAdmin();
+
+  const navItems = [
+    ...baseNavItems,
+    ...(isAdmin ? adminNavItems : []),
+    ...bottomNavItems,
+  ];
 
   return (
     <aside
