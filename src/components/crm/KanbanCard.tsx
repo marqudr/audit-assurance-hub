@@ -119,17 +119,17 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
         )}
       </div>
 
-      <div className="flex items-center gap-3 text-xs">
-        {dealValue && (
-          <span className="flex items-center gap-1 text-emerald-600 font-medium">
-            <DollarSign className="h-3 w-3" />
-            {dealValue}
-          </span>
-        )}
+      <div className="flex items-center justify-between text-xs">
         <span className="flex items-center gap-1 text-muted-foreground">
           <CheckSquare className="h-3 w-3" />
           {completed}/{total}
         </span>
+        {dealValue && (
+          <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+            <DollarSign className="h-3 w-3" />
+            {dealValue}
+          </span>
+        )}
       </div>
 
       {lead.probability != null && (

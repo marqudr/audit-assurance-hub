@@ -261,6 +261,14 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
             <div><span className="text-muted-foreground">Probabilidade</span><p className="font-medium">{lead.probability != null ? `${lead.probability}%` : "—"}</p></div>
             <div><span className="text-muted-foreground">Fechamento Esperado</span><p className="font-medium">{lead.expected_close_date ? format(new Date(lead.expected_close_date), "dd/MM/yyyy") : "—"}</p></div>
           </div>
+          {(lead.estimated_benefit_min && lead.estimated_benefit_max) && (
+            <div className="mt-3 p-3 rounded-md bg-muted/50 border">
+              <p className="text-xs text-muted-foreground mb-1">Benefício Fiscal Estimado (Lei do Bem)</p>
+              <p className="text-lg font-bold text-primary">
+                R$ {lead.estimated_benefit_min.toLocaleString("pt-BR", { minimumFractionDigits: 0 })} – R$ {lead.estimated_benefit_max.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
+              </p>
+            </div>
+          )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -488,9 +496,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
             </div>
           )}
 
-          {/* Simulador de Potencial Fiscal */}
+          {/* Simulador de Potencial Fiscal — hide proposal button in qualification */}
           <Separator />
-          <TaxSimulator lead={lead} />
+          <TaxSimulator lead={lead} hideProposalButton={lead.status === "qualificacao"} />
 
           {/* Contatos */}
           <Separator />
