@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Trash2, Loader2, MapPin, User } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
+import { formatPhone } from "./NewLeadModal";
 import { useLeadContacts, useCreateLeadContact, useDeleteLeadContact, type Lead } from "@/hooks/useLeads";
 import { toast } from "sonner";
 
@@ -142,7 +143,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                   <div className="space-y-1"><Label className="text-xs">Cargo</Label><Input placeholder="Cargo" value={newRole} onChange={(e) => setNewRole(e.target.value)} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><Label className="text-xs">Telefone</Label><Input placeholder="(11) 99999-9999" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} /></div>
+                  <div className="space-y-1"><Label className="text-xs">Telefone</Label><Input placeholder="(11) 99999-9999" value={newPhone} onChange={(e) => setNewPhone(formatPhone(e.target.value))} /></div>
                   <div className="space-y-1"><Label className="text-xs">E-mail</Label><Input placeholder="email@empresa.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} /></div>
                 </div>
                 <div className="flex gap-2">

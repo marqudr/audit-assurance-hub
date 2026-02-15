@@ -36,6 +36,15 @@ function formatCnpj(value: string): string {
   return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
 }
 
+export function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 const emptyContact = (): ContactInput => ({ name: "", role: "", phone: "", email: "" });
 
 export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
@@ -284,7 +293,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Telefone</Label>
-                  <Input placeholder="(11) 99999-9999" value={contact.phone} onChange={(e) => updateContact(i, "phone", e.target.value)} />
+                  <Input placeholder="(11) 99999-9999" value={contact.phone} onChange={(e) => updateContact(i, "phone", formatPhone(e.target.value))} />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">E-mail</Label>
