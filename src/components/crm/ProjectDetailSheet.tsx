@@ -415,10 +415,10 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                       <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>
                         <SelectTrigger><SelectValue placeholder="Selecione um método" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="BANT">BANT</SelectItem>
-                          <SelectItem value="ANUM">ANUM</SelectItem>
-                          <SelectItem value="MEDDIC">MEDDIC</SelectItem>
-                          <SelectItem value="SPIN">SPIN</SelectItem>
+                          <SelectItem value="BANT">Orçamento, Decisor, Necessidade e Prazo</SelectItem>
+                          <SelectItem value="ANUM">Autoridade, Necessidade, Urgência e Dinheiro</SelectItem>
+                          <SelectItem value="MEDDIC">Métricas, Decisor e Critérios de Decisão</SelectItem>
+                          <SelectItem value="SPIN">Situação, Problema, Implicação e Solução</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
