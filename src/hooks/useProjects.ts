@@ -18,6 +18,11 @@ export interface Project {
   engineering_headcount: number | null;
   rd_annual_budget: number | null;
   icp_score: number | null;
+  frascati_novidade: boolean;
+  frascati_criatividade: boolean;
+  frascati_incerteza: boolean;
+  frascati_sistematicidade: boolean;
+  frascati_transferibilidade: boolean;
   has_budget: boolean;
   has_authority: boolean;
   has_need: boolean;

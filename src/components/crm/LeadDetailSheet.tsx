@@ -92,7 +92,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         first_touch_channel: lead.first_touch_channel || "",
         last_touch_channel: lead.last_touch_channel || "",
         estimated_cac: lead.estimated_cac ? formatBRL(String(Math.round(lead.estimated_cac * 100))) : "",
-        icp_score: lead.icp_score ?? 5,
+        // Eligibility fields for ICP auto-calc
+        has_lucro_fiscal: lead.has_lucro_fiscal ?? false,
+        has_regularidade_fiscal: lead.has_regularidade_fiscal ?? false,
         qualification_method: lead.qualification_method || "",
         has_budget: lead.has_budget ?? false,
         has_authority: lead.has_authority ?? false,
@@ -113,7 +115,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         expected_close_date: lead.expected_close_date ? new Date(lead.expected_close_date) : undefined,
       });
     }
-    // Only run when editing is toggled on, not when lead data changes mid-edit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
 
@@ -124,6 +125,24 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const timeInStage = differenceInDays(new Date(), new Date(lead.updated_at));
   const tisColor = timeInStage > 14 ? "text-red-600" : timeInStage > 7 ? "text-yellow-600" : "text-green-600";
   const bantScore = [lead.has_budget, lead.has_authority, lead.has_need, lead.has_timeline].filter(Boolean).length;
+
+  // Auto-calculated ICP Score based on eligibility
+  const calcIcpScore = (data: Record<string, any>) => {
+    let score = 0;
+    if (data.tax_regime === "Lucro Real") score += 2.5;
+    if (data.has_lucro_fiscal) score += 2.5;
+    if (data.has_regularidade_fiscal) score += 2.5;
+    if (lead.rd_annual_budget && lead.rd_annual_budget > 0) score += 2.5;
+    return score;
+  };
+  const currentIcpScore = calcIcpScore({
+    tax_regime: lead.tax_regime,
+    has_lucro_fiscal: lead.has_lucro_fiscal,
+    has_regularidade_fiscal: lead.has_regularidade_fiscal,
+  });
+  const icpBadgeClass = currentIcpScore < 5 ? "bg-red-100 text-red-700 border-red-200" :
+    currentIcpScore < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
+    "bg-green-100 text-green-700 border-green-200";
 
   const handleAddContact = async () => {
     if (!newName.trim()) { toast.error("Informe o nome do contato."); return; }
@@ -136,6 +155,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const handleSaveEdit = async () => {
     if (!editData.company_name?.trim()) { toast.error("Informe o nome da empresa."); return; }
     try {
+      const computedIcp = calcIcpScore(editData);
       await updateLead.mutateAsync({
         id: lead.id,
         company_name: editData.company_name,
@@ -153,13 +173,14 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         address_city: editData.address_city || null,
         address_state: editData.address_state || null,
         address_zip: editData.address_zip || null,
-        // Attribution
         source_medium: editData.source_medium || null,
         first_touch_channel: editData.first_touch_channel || null,
         last_touch_channel: editData.last_touch_channel || null,
         estimated_cac: editData.estimated_cac ? parseBRL(editData.estimated_cac) : null,
-        // Qualification
-        icp_score: editData.icp_score,
+        // Auto-calculated ICP
+        icp_score: computedIcp,
+        has_lucro_fiscal: editData.has_lucro_fiscal,
+        has_regularidade_fiscal: editData.has_regularidade_fiscal,
         qualification_method: editData.qualification_method || null,
         has_budget: editData.has_budget,
         has_authority: editData.has_authority,
@@ -168,14 +189,12 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         pain_points: editData.pain_points || null,
         context: editData.context || null,
         objection: editData.objection || null,
-        // Velocity
         next_action: editData.next_action || null,
         next_action_date: editData.next_action_date ? editData.next_action_date.toISOString() : null,
         content_consumed: editData.content_consumed || null,
         last_contacted_date: editData.last_contacted_date ? editData.last_contacted_date.toISOString() : null,
         last_activity_type: editData.last_activity_type || null,
         next_activity_date: editData.next_activity_date ? editData.next_activity_date.toISOString() : null,
-        // Revenue
         estimated_ltv: editData.estimated_ltv ? parseBRL(editData.estimated_ltv) : null,
         probability: editData.probability,
         deal_value: editData.deal_value ? parseBRL(editData.deal_value) : null,
@@ -215,14 +234,36 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">ICP Score</span>
-              <Badge variant="outline" className={cn(
-                lead.icp_score != null && lead.icp_score <= 3 ? "bg-red-100 text-red-700 border-red-200" :
-                lead.icp_score != null && lead.icp_score <= 6 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-                lead.icp_score != null ? "bg-green-100 text-green-700 border-green-200" : ""
-              )}>{lead.icp_score ?? "—"}/10</Badge>
+            {/* Elegibilidade ICP */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-sm">Elegibilidade (ICP Score)</span>
+                <Badge variant="outline" className={icpBadgeClass}>{currentIcpScore}/10</Badge>
+              </div>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className={lead.tax_regime === "Lucro Real" ? "text-green-600" : "text-muted-foreground"}>
+                    {lead.tax_regime === "Lucro Real" ? "✅" : "⬜"} Regime Tributário: Lucro Real
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={lead.has_lucro_fiscal ? "text-green-600" : "text-muted-foreground"}>
+                    {lead.has_lucro_fiscal ? "✅" : "⬜"} Resultado Fiscal positivo
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={lead.has_regularidade_fiscal ? "text-green-600" : "text-muted-foreground"}>
+                    {lead.has_regularidade_fiscal ? "✅" : "⬜"} Regularidade Fiscal (CND/CPEND)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={(lead.rd_annual_budget && lead.rd_annual_budget > 0) ? "text-green-600" : "text-muted-foreground"}>
+                    {(lead.rd_annual_budget && lead.rd_annual_budget > 0) ? "✅" : "⬜"} Investimento em P&D comprovado
+                  </span>
+                </div>
+              </div>
             </div>
+            <Separator />
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Método</span>
               <span className="font-medium">{lead.qualification_method || "—"}</span>
@@ -298,10 +339,32 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-4">
+            {/* Eligibility checkboxes for auto ICP */}
             <div className="space-y-2">
-              <Label className="text-xs">ICP Score: {editData.icp_score}/10</Label>
-              <Slider value={[editData.icp_score ?? 5]} onValueChange={([v]) => ed("icp_score", v)} min={0} max={10} step={1} />
+              <Label className="text-xs font-medium">Elegibilidade (ICP Score): {calcIcpScore(editData)}/10</Label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={editData.tax_regime === "Lucro Real"} onCheckedChange={(v) => ed("tax_regime", v ? "Lucro Real" : "")} />
+                  Regime Tributário: Lucro Real
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={editData.has_lucro_fiscal} onCheckedChange={(v) => ed("has_lucro_fiscal", !!v)} />
+                  Resultado Fiscal positivo no ano-base
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={editData.has_regularidade_fiscal} onCheckedChange={(v) => ed("has_regularidade_fiscal", !!v)} />
+                  Regularidade Fiscal (CND/CPEND ativa)
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer text-muted-foreground">
+                  <Checkbox checked={!!(lead.rd_annual_budget && lead.rd_annual_budget > 0)} disabled />
+                  Investimento em P&D comprovado (via Simulador Fiscal)
+                </label>
+              </div>
+              <Badge variant="outline" className={calcIcpScore(editData) < 5 ? "bg-red-100 text-red-700 border-red-200" : calcIcpScore(editData) < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200"}>
+                Score: {calcIcpScore(editData)}/10
+              </Badge>
             </div>
+            <Separator />
             <div className="space-y-1">
               <Label className="text-xs">Método de Qualificação</Label>
               <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>

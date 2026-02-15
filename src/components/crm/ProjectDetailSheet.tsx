@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone, Loader2, Building2, ClipboardList } from "lucide-react";
+import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone, Loader2, Building2, ClipboardList, FlaskConical } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
 import { PhaseChecklist } from "./PhaseChecklist";
 import { ProjectAttachments } from "./ProjectAttachments";
@@ -60,7 +60,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         first_touch_channel: project.first_touch_channel || "",
         last_touch_channel: project.last_touch_channel || "",
         estimated_cac: project.estimated_cac ? formatBRL(String(Math.round(project.estimated_cac * 100))) : "",
-        icp_score: project.icp_score ?? 5,
+        icp_score: project.icp_score ?? 0,
         qualification_method: project.qualification_method || "",
         has_budget: project.has_budget ?? false,
         has_authority: project.has_authority ?? false,
@@ -79,6 +79,12 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         probability: project.probability ?? 50,
         deal_value: project.deal_value ? formatBRL(String(Math.round(project.deal_value * 100))) : "",
         expected_close_date: project.expected_close_date ? new Date(project.expected_close_date) : undefined,
+        // Frascati fields
+        frascati_novidade: project.frascati_novidade ?? false,
+        frascati_criatividade: project.frascati_criatividade ?? false,
+        frascati_incerteza: project.frascati_incerteza ?? false,
+        frascati_sistematicidade: project.frascati_sistematicidade ?? false,
+        frascati_transferibilidade: project.frascati_transferibilidade ?? false,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,6 +98,11 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
   const bantScore = [project.has_budget, project.has_authority, project.has_need, project.has_timeline].filter(Boolean).length;
 
   const ed = (field: string, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
+
+  const frascatiScore = [project.frascati_novidade, project.frascati_criatividade, project.frascati_incerteza, project.frascati_sistematicidade, project.frascati_transferibilidade].filter(Boolean).length;
+  const frascatiBadgeClass = frascatiScore < 3 ? "bg-red-100 text-red-700 border-red-200" : frascatiScore < 5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
+
+  const calcEditFrascatiScore = () => [editData.frascati_novidade, editData.frascati_criatividade, editData.frascati_incerteza, editData.frascati_sistematicidade, editData.frascati_transferibilidade].filter(Boolean).length;
 
   const handleSaveEdit = async () => {
     if (!editData.name?.trim()) { toast.error("Informe o nome do projeto."); return; }
@@ -124,6 +135,12 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         probability: editData.probability,
         deal_value: editData.deal_value ? parseBRL(editData.deal_value) : null,
         expected_close_date: editData.expected_close_date ? format(editData.expected_close_date, "yyyy-MM-dd") : null,
+        // Frascati
+        frascati_novidade: editData.frascati_novidade,
+        frascati_criatividade: editData.frascati_criatividade,
+        frascati_incerteza: editData.frascati_incerteza,
+        frascati_sistematicidade: editData.frascati_sistematicidade,
+        frascati_transferibilidade: editData.frascati_transferibilidade,
       } as any);
       toast.success("Projeto atualizado com sucesso!");
       setEditing(false);
@@ -251,13 +268,49 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                 <AccordionContent>
                   <div className="space-y-3 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">ICP Score</span>
+                      <span className="text-muted-foreground">ICP Score (Empresa)</span>
                       <Badge variant="outline" className={cn(
-                        project.icp_score != null && project.icp_score <= 3 ? "bg-red-100 text-red-700 border-red-200" :
-                        project.icp_score != null && project.icp_score <= 6 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
+                        project.icp_score != null && project.icp_score < 5 ? "bg-red-100 text-red-700 border-red-200" :
+                        project.icp_score != null && project.icp_score < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
                         project.icp_score != null ? "bg-green-100 text-green-700 border-green-200" : ""
                       )}>{project.icp_score ?? "—"}/10</Badge>
                     </div>
+                    {/* Frascati Section */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">Mérito Tecnológico (Frascati)</span>
+                        <Badge variant="outline" className={frascatiBadgeClass}>{frascatiScore}/5</Badge>
+                      </div>
+                      <div className="space-y-1.5 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className={project.frascati_novidade ? "text-green-600" : "text-muted-foreground"}>
+                            {project.frascati_novidade ? "✅" : "⬜"} Novidade
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={project.frascati_criatividade ? "text-green-600" : "text-muted-foreground"}>
+                            {project.frascati_criatividade ? "✅" : "⬜"} Criatividade
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={project.frascati_incerteza ? "text-green-600" : "text-muted-foreground"}>
+                            {project.frascati_incerteza ? "✅" : "⬜"} Incerteza (Risco Tecnológico)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={project.frascati_sistematicidade ? "text-green-600" : "text-muted-foreground"}>
+                            {project.frascati_sistematicidade ? "✅" : "⬜"} Sistematicidade
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={project.frascati_transferibilidade ? "text-green-600" : "text-muted-foreground"}>
+                            {project.frascati_transferibilidade ? "✅" : "⬜"} Transferibilidade
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <Separator />
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Método</span>
                       <span className="font-medium">{project.qualification_method || "—"}</span>
@@ -324,9 +377,39 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                 <AccordionContent>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-xs">ICP Score: {editData.icp_score}/10</Label>
-                      <Slider value={[editData.icp_score ?? 5]} onValueChange={([v]) => ed("icp_score", v)} min={0} max={10} step={1} />
+                      <Label className="text-xs text-muted-foreground">ICP Score (calculado na empresa): {project.icp_score ?? 0}/10</Label>
                     </div>
+                    {/* Frascati Edit */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium">Mérito Tecnológico (Frascati): {calcEditFrascatiScore()}/5</Label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox checked={editData.frascati_novidade} onCheckedChange={(v) => ed("frascati_novidade", !!v)} />
+                          Novidade — Visa resultados novos para a empresa ou mercado
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox checked={editData.frascati_criatividade} onCheckedChange={(v) => ed("frascati_criatividade", !!v)} />
+                          Criatividade — Baseia-se em conceitos originais e não óbvios
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox checked={editData.frascati_incerteza} onCheckedChange={(v) => ed("frascati_incerteza", !!v)} />
+                          Incerteza — Há dúvida se o resultado é alcançável
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox checked={editData.frascati_sistematicidade} onCheckedChange={(v) => ed("frascati_sistematicidade", !!v)} />
+                          Sistematicidade — Planejamento, orçamento e registros
+                        </label>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <Checkbox checked={editData.frascati_transferibilidade} onCheckedChange={(v) => ed("frascati_transferibilidade", !!v)} />
+                          Transferibilidade — Conhecimento codificável e transferível
+                        </label>
+                      </div>
+                      <Badge variant="outline" className={calcEditFrascatiScore() < 3 ? "bg-red-100 text-red-700 border-red-200" : calcEditFrascatiScore() < 5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200"}>
+                        Score: {calcEditFrascatiScore()}/5
+                      </Badge>
+                    </div>
+                    <Separator />
                     <div className="space-y-1">
                       <Label className="text-xs">Método de Qualificação</Label>
                       <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>
