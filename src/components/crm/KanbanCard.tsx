@@ -1,9 +1,10 @@
-import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck } from "lucide-react";
+import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck, Trophy, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Lead } from "@/hooks/useLeads";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
 import { getPhaseCompletionCount } from "@/hooks/useLeadChecklist";
 import { differenceInDays } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface KanbanCardProps {
   lead: Lead;
@@ -62,15 +63,25 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
   const bantScore = [lead.has_budget, lead.has_authority, lead.has_need, lead.has_timeline].filter(Boolean).length;
   const isZombie = !lead.next_action;
 
+  const isGanho = lead.status === "ganho";
+  const isPerdido = lead.status === "perdido";
+
   return (
     <div
-      draggable
+      draggable={!isGanho}
       onDragStart={(e) => {
+        if (isGanho) { e.preventDefault(); return; }
         e.dataTransfer.setData("text/plain", lead.id);
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={onClick}
-      className={`bg-card rounded-lg p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow space-y-2 select-none ${borderClass(lead.next_action_date)}`}
+      className={cn(
+        "bg-card rounded-lg p-3 hover:shadow-md transition-shadow space-y-2 select-none",
+        isGanho ? "cursor-default ring-2 ring-emerald-400/50 bg-emerald-50/50 dark:bg-emerald-950/20" :
+        isPerdido ? "cursor-grab active:cursor-grabbing opacity-60" :
+        "cursor-grab active:cursor-grabbing",
+        !isGanho && !isPerdido && borderClass(lead.next_action_date)
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">

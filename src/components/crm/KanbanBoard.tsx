@@ -13,6 +13,8 @@ const PIPELINE_PHASES: { phase: string; label: string; color: string }[] = [
   { phase: "diagnostico", label: "Diagnóstico", color: "bg-orange-500" },
   { phase: "proposta", label: "Proposta", color: "bg-purple-500" },
   { phase: "fechamento", label: "Fechamento", color: "bg-green-500" },
+  { phase: "ganho", label: "Ganho", color: "bg-emerald-500" },
+  { phase: "perdido", label: "Perdido", color: "bg-red-400" },
 ];
 
 const PHASE_ORDER = PIPELINE_PHASES.map((p) => p.phase);
@@ -68,12 +70,20 @@ export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
     const currentIndex = PHASE_ORDER.indexOf(lead.status);
     const targetIndex = PHASE_ORDER.indexOf(targetPhase);
 
-    // If moving forward, check gate
+    // Prevent moving back from "ganho"
+    if (lead.status === "ganho") {
+      toast.error("Leads ganhos não podem retroceder no pipeline.");
+      return;
+    }
+
+    // If moving forward, check gate (only for pipeline phases, not terminal)
     if (targetIndex > currentIndex) {
       const checklist = allChecklist[leadId] || [];
-      // Check all phases between current and target
-      for (let i = currentIndex; i < targetIndex; i++) {
+      // Check all phases between current and target (exclude ganho/perdido from gate check)
+      const lastGatedIndex = PHASE_ORDER.indexOf("fechamento");
+      for (let i = currentIndex; i < Math.min(targetIndex, lastGatedIndex + 1); i++) {
         const phase = PHASE_ORDER[i];
+        if (phase === "ganho" || phase === "perdido") continue;
         if (!isPhaseComplete(checklist, phase)) {
           const pending = getPendingItems(checklist, phase);
           toast.error(`Complete o checklist de "${PIPELINE_PHASES[i].label}" antes de avançar`, {
