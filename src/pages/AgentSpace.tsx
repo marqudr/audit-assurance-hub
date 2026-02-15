@@ -27,7 +27,7 @@ export default function AgentSpace() {
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       {/* Agent list sidebar */}
-      <div className="w-64 border-r bg-card shrink-0 flex flex-col">
+      <div className="w-[30%] border-r bg-card shrink-0 flex flex-col">
         <div className="px-4 py-3 border-b">
           <h2 className="text-sm font-semibold">Agentes Disponíveis</h2>
           <p className="text-xs text-muted-foreground">
