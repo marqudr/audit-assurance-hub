@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useCreateLead, useCreateLeadContact } from "@/hooks/useLeads";
+import { useCreateProject } from "@/hooks/useProjects";
 import { toast } from "sonner";
 
 interface ContactInput {
@@ -86,6 +87,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
 
   const createLead = useCreateLead();
   const createContact = useCreateLeadContact();
+  const createProject = useCreateProject();
 
   const resetForm = () => {
     setCnpj(""); setCompanyName(""); setCnae(""); setSector("");
@@ -171,7 +173,14 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
         });
       }
 
-      toast.success("Lead cadastrado com sucesso!");
+      // Criar projeto inicial na fase de prospecção
+      await createProject.mutateAsync({
+        lead_id: lead.id,
+        name: `Projeto — ${companyName}`,
+        status: "prospeccao",
+      });
+
+      toast.success("Empresa cadastrada com sucesso!");
       resetForm();
       onOpenChange(false);
     } catch {
