@@ -14,13 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agent_rag_files: {
+        Row: {
+          agent_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_rag_files_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          created_at: string
+          id: string
+          instructions: string | null
+          model_config: Json
+          name: string
+          persona: string | null
+          status: string
+          temperature: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          model_config?: Json
+          name: string
+          persona?: string | null
+          status?: string
+          temperature?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          model_config?: Json
+          name?: string
+          persona?: string | null
+          status?: string
+          temperature?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_agent_owner: { Args: { _agent_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
