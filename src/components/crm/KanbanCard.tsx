@@ -1,4 +1,4 @@
-import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck, Building2 } from "lucide-react";
+import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { Project } from "@/hooks/useProjects";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
@@ -52,7 +52,6 @@ export function KanbanCard({ project, checklist, onClick }: KanbanCardProps) {
   const dealValue = formatValue(project.deal_value);
   const icp = icpBadge(project.icp_score);
   const tis = timeInStage(project.updated_at);
-  const bantScore = [project.has_budget, project.has_authority, project.has_need, project.has_timeline].filter(Boolean).length;
   const isZombie = !project.next_action;
 
   const isGanho = project.status === "ganho";
@@ -94,12 +93,6 @@ export function KanbanCard({ project, checklist, onClick }: KanbanCardProps) {
           <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${icp.className}`}>
             <Target className="h-2.5 w-2.5 mr-0.5" />
             {icp.label}
-          </Badge>
-        )}
-        {bantScore > 0 && (
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
-            <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
-            BANT {bantScore}/4
           </Badge>
         )}
         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${tis.color}`}>
