@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone, Loader2, Building2 } from "lucide-react";
+import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone, Loader2, Building2, ClipboardList } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
 import { PhaseChecklist } from "./PhaseChecklist";
 import { ProjectAttachments } from "./ProjectAttachments";
@@ -177,19 +177,12 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                   {project.company_name}
                 </button>
               )}
-              {project.description && (
-                <p className="text-sm text-muted-foreground">{project.description}</p>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Nome do Projeto</Label>
                 <Input value={editData.name} onChange={(e) => ed("name", e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Textarea value={editData.description} onChange={(e) => ed("description", e.target.value)} rows={3} />
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
@@ -204,6 +197,31 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
               </div>
             </div>
           )}
+
+          {/* Detalhe do Projeto */}
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" /> Detalhe do Projeto
+            </h4>
+            {!editing ? (
+              <div className="rounded-md border p-4 bg-muted/30">
+                <p className="text-sm whitespace-pre-wrap">
+                  {project.description || <span className="text-muted-foreground italic">Nenhuma descrição adicionada. Clique em "Editar" para detalhar o projeto.</span>}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Descrição do Projeto</Label>
+                <Textarea
+                  value={editData.description}
+                  onChange={(e) => ed("description", e.target.value)}
+                  rows={6}
+                  placeholder="Descreva o projeto que está sendo vendido: escopo, objetivos, entregáveis, diferenciais..."
+                />
+              </div>
+            )}
+          </div>
 
           {/* Tax Simulator */}
           <Separator />
