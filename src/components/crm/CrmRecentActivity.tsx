@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,15 +6,15 @@ import { History, CalendarDays, Plus, Trash2 } from "lucide-react";
 import { format, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import type { Lead } from "@/hooks/useLeads";
+import type { Project } from "@/hooks/useProjects";
 import { useTodayAppointments, useCreateAppointment, useDeleteAppointment } from "@/hooks/useAppointments";
 
 interface CrmRecentActivityProps {
-  leads: Lead[];
-  onCardClick: (lead: Lead) => void;
+  projects: Project[];
+  onCardClick: (project: Project) => void;
 }
 
-export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps) {
+export function CrmRecentActivity({ projects, onCardClick }: CrmRecentActivityProps) {
   const [newTitle, setNewTitle] = useState("");
   const [newTime, setNewTime] = useState("");
 
@@ -25,16 +24,16 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
 
   const recentInteractions = useMemo(
     () =>
-      [...leads]
-        .filter((l) => l.last_contacted_date)
+      [...projects]
+        .filter((p) => p.last_contacted_date)
         .sort((a, b) => new Date(b.last_contacted_date!).getTime() - new Date(a.last_contacted_date!).getTime())
         .slice(0, 5),
-    [leads]
+    [projects]
   );
 
-  const todayLeadAgenda = useMemo(
-    () => leads.filter((l) => l.next_activity_date && isToday(parseISO(l.next_activity_date))),
-    [leads]
+  const todayProjectAgenda = useMemo(
+    () => projects.filter((p) => p.next_activity_date && isToday(parseISO(p.next_activity_date))),
+    [projects]
   );
 
   const handleAddAppointment = async () => {
@@ -65,7 +64,6 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
 
   return (
     <div className="space-y-4">
-      {/* Últimas Interações */}
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
           <History className="h-3.5 w-3.5" />
@@ -75,26 +73,26 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
           <p className="text-xs text-muted-foreground italic">Nenhuma interação registrada</p>
         ) : (
           <div className="space-y-1">
-            {recentInteractions.map((lead) => (
+            {recentInteractions.map((project) => (
               <button
-                key={lead.id}
-                onClick={() => onCardClick(lead)}
+                key={project.id}
+                onClick={() => onCardClick(project)}
                 className="flex flex-col w-full text-left text-xs hover:bg-muted/50 rounded px-2 py-1.5 gap-0.5"
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="font-medium truncate">{lead.company_name}</span>
+                  <span className="font-medium truncate">{project.name}</span>
                   <span className="text-muted-foreground shrink-0">
-                    {format(parseISO(lead.last_contacted_date!), "dd/MM", { locale: ptBR })}
+                    {format(parseISO(project.last_contacted_date!), "dd/MM", { locale: ptBR })}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {lead.last_activity_type && (
+                  {project.last_activity_type && (
                     <Badge variant="outline" className="text-[10px] px-1 py-0">
-                      {lead.last_activity_type}
+                      {project.last_activity_type}
                     </Badge>
                   )}
-                  {lead.content_consumed && (
-                    <span className="text-muted-foreground truncate">{lead.content_consumed}</span>
+                  {project.company_name && (
+                    <span className="text-muted-foreground truncate">{project.company_name}</span>
                   )}
                 </div>
               </button>
@@ -103,27 +101,25 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
         )}
       </div>
 
-      {/* Agenda de Hoje */}
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
           <CalendarDays className="h-3.5 w-3.5" />
           Agenda de Hoje
         </p>
 
-        {/* Lead-based agenda */}
-        {todayLeadAgenda.length > 0 && (
+        {todayProjectAgenda.length > 0 && (
           <div className="space-y-1 mb-2">
-            {todayLeadAgenda.map((lead) => (
+            {todayProjectAgenda.map((project) => (
               <button
-                key={lead.id}
-                onClick={() => onCardClick(lead)}
+                key={project.id}
+                onClick={() => onCardClick(project)}
                 className="flex items-center justify-between w-full text-xs hover:bg-muted/50 rounded px-2 py-1.5"
               >
-                <span className="font-medium truncate">{lead.company_name}</span>
+                <span className="font-medium truncate">{project.name}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {lead.next_action && (
+                  {project.next_action && (
                     <Badge variant="secondary" className="text-[10px] px-1.5">
-                      {lead.next_action}
+                      {project.next_action}
                     </Badge>
                   )}
                 </div>
@@ -132,7 +128,6 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
           </div>
         )}
 
-        {/* Custom appointments */}
         {appointments.length > 0 && (
           <div className="space-y-1 mb-2">
             {appointments.map((appt) => (
@@ -161,11 +156,10 @@ export function CrmRecentActivity({ leads, onCardClick }: CrmRecentActivityProps
           </div>
         )}
 
-        {todayLeadAgenda.length === 0 && appointments.length === 0 && (
+        {todayProjectAgenda.length === 0 && appointments.length === 0 && (
           <p className="text-xs text-muted-foreground italic mb-2">Nenhuma atividade agendada para hoje</p>
         )}
 
-        {/* Add appointment form */}
         <div className="flex gap-1.5 items-center mt-2">
           <Input
             placeholder="Novo compromisso..."

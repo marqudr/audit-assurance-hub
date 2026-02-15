@@ -2,48 +2,48 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Clock, PhoneOff, CheckCircle2 } from "lucide-react";
 import { differenceInDays } from "date-fns";
-import type { Lead } from "@/hooks/useLeads";
+import type { Project } from "@/hooks/useProjects";
 
 interface CrmActionAlertsProps {
-  leads: Lead[];
-  onCardClick: (lead: Lead) => void;
+  projects: Project[];
+  onCardClick: (project: Project) => void;
   inline?: boolean;
 }
 
 const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
 
-export function CrmActionAlerts({ leads, onCardClick, inline }: CrmActionAlertsProps) {
-  const activeLeads = useMemo(
-    () => leads.filter((l) => ACTIVE_STATUSES.includes(l.status)),
-    [leads]
+export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAlertsProps) {
+  const activeProjects = useMemo(
+    () => projects.filter((p) => ACTIVE_STATUSES.includes(p.status)),
+    [projects]
   );
 
   const noContact = useMemo(
-    () => activeLeads.filter((l) => l.status === "prospeccao" && !l.last_contacted_date),
-    [activeLeads]
+    () => activeProjects.filter((p) => p.status === "prospeccao" && !p.last_contacted_date),
+    [activeProjects]
   );
 
   const overdue = useMemo(() => {
     const now = new Date();
-    return activeLeads.filter((l) => {
-      const d1 = l.next_activity_date ? new Date(l.next_activity_date) : null;
-      const d2 = l.next_action_date ? new Date(l.next_action_date) : null;
+    return activeProjects.filter((p) => {
+      const d1 = p.next_activity_date ? new Date(p.next_activity_date) : null;
+      const d2 = p.next_action_date ? new Date(p.next_action_date) : null;
       return (d1 && d1 < now) || (d2 && d2 < now);
     });
-  }, [activeLeads]);
+  }, [activeProjects]);
 
   const stalled = useMemo(() => {
     const now = new Date();
-    return activeLeads
-      .map((l) => {
-        const days = l.last_contacted_date
-          ? differenceInDays(now, new Date(l.last_contacted_date))
+    return activeProjects
+      .map((p) => {
+        const days = p.last_contacted_date
+          ? differenceInDays(now, new Date(p.last_contacted_date))
           : 999;
-        return { lead: l, days };
+        return { project: p, days };
       })
       .filter(({ days }) => days >= 3)
       .sort((a, b) => b.days - a.days);
-  }, [activeLeads]);
+  }, [activeProjects]);
 
   const stalled7 = stalled.filter((s) => s.days >= 7).length;
   const stalled5 = stalled.filter((s) => s.days >= 5 && s.days < 7).length;
@@ -53,19 +53,17 @@ export function CrmActionAlerts({ leads, onCardClick, inline }: CrmActionAlertsP
 
   const alertsGrid = (
     <div className={inline ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 sm:grid-cols-3 gap-3"}>
-      {/* No contact */}
       <AlertCard
         icon={<PhoneOff className="h-4 w-4" />}
         title="Sem Contato"
         count={noContact.length}
-        description="Leads novos sem nenhum contato"
+        description="Projetos novos sem nenhum contato"
         colorClass={noContact.length > 0 ? "text-destructive" : "text-muted-foreground"}
         items={noContact}
         onItemClick={onCardClick}
         expanded={inline}
         maxItems={inline ? 10 : 5}
       />
-      {/* Overdue */}
       <AlertCard
         icon={<Clock className="h-4 w-4" />}
         title="Atrasados"
@@ -77,7 +75,6 @@ export function CrmActionAlerts({ leads, onCardClick, inline }: CrmActionAlertsP
         expanded={inline}
         maxItems={inline ? 10 : 5}
       />
-      {/* Stalled */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-xs font-medium">
           <AlertTriangle className="h-4 w-4" />
@@ -97,13 +94,13 @@ export function CrmActionAlerts({ leads, onCardClick, inline }: CrmActionAlertsP
         </div>
         {stalled.length > 0 && (
           <div className="space-y-0.5 mt-1 max-h-40 overflow-y-auto">
-            {stalled.slice(0, inline ? 10 : 5).map(({ lead, days }) => (
+            {stalled.slice(0, inline ? 10 : 5).map(({ project, days }) => (
               <button
-                key={lead.id}
-                onClick={() => onCardClick(lead)}
+                key={project.id}
+                onClick={() => onCardClick(project)}
                 className="block w-full text-left text-xs truncate hover:underline text-muted-foreground"
               >
-                {lead.company_name} ({days}d)
+                {project.name} ({days}d)
               </button>
             ))}
           </div>
@@ -151,8 +148,8 @@ function AlertCard({
   count: number;
   description: string;
   colorClass: string;
-  items: Lead[];
-  onItemClick: (lead: Lead) => void;
+  items: Project[];
+  onItemClick: (project: Project) => void;
   expanded?: boolean;
   maxItems?: number;
 }) {
@@ -165,13 +162,13 @@ function AlertCard({
       <p className="text-[10px] text-muted-foreground">{description}</p>
       {items.length > 0 && (
         <div className={`space-y-0.5 ${expanded ? "max-h-60" : "max-h-20"} overflow-y-auto`}>
-          {items.slice(0, maxItems).map((lead) => (
+          {items.slice(0, maxItems).map((project) => (
             <button
-              key={lead.id}
-              onClick={() => onItemClick(lead)}
+              key={project.id}
+              onClick={() => onItemClick(project)}
               className="block w-full text-left text-xs truncate hover:underline text-muted-foreground"
             >
-              {lead.company_name}
+              {project.name}
             </button>
           ))}
         </div>

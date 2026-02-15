@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { KanbanColumn } from "./KanbanColumn";
 import { useLeadChecklist, isPhaseComplete, getPendingItems } from "@/hooks/useLeadChecklist";
-import { useUpdateLead, type Lead, type LeadStatus } from "@/hooks/useLeads";
+import { useUpdateProject, type Project } from "@/hooks/useProjects";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,15 +20,15 @@ const PIPELINE_PHASES: { phase: string; label: string; color: string }[] = [
 const PHASE_ORDER = PIPELINE_PHASES.map((p) => p.phase);
 
 interface KanbanBoardProps {
-  leads: Lead[];
-  onCardClick: (lead: Lead) => void;
+  projects: Project[];
+  onCardClick: (project: Project) => void;
 }
 
-export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
-  const updateLead = useUpdateLead();
+export function KanbanBoard({ projects, onCardClick }: KanbanBoardProps) {
+  const updateProject = useUpdateProject();
 
-  // Fetch all checklist items for all leads at once
-  const leadIds = leads.map((l) => l.id);
+  // Fetch all checklist items for all projects' leads at once
+  const leadIds = [...new Set(projects.map((p) => p.lead_id))];
   const { data: allChecklistRaw = [] } = useQuery({
     queryKey: ["lead-checklist-all", leadIds.sort().join(",")],
     queryFn: async () => {
@@ -52,34 +52,33 @@ export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
     return map;
   }, [allChecklistRaw]);
 
-  const leadsByPhase = useMemo(() => {
-    const map: Record<string, Lead[]> = {};
+  const projectsByPhase = useMemo(() => {
+    const map: Record<string, Project[]> = {};
     PIPELINE_PHASES.forEach((p) => (map[p.phase] = []));
-    leads.forEach((lead) => {
-      if (map[lead.status]) {
-        map[lead.status].push(lead);
+    projects.forEach((project) => {
+      if (map[project.status]) {
+        map[project.status].push(project);
       }
     });
     return map;
-  }, [leads]);
+  }, [projects]);
 
-  const handleDrop = async (leadId: string, targetPhase: string) => {
-    const lead = leads.find((l) => l.id === leadId);
-    if (!lead || lead.status === targetPhase) return;
+  const handleDrop = async (projectId: string, targetPhase: string) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project || project.status === targetPhase) return;
 
-    const currentIndex = PHASE_ORDER.indexOf(lead.status);
+    const currentIndex = PHASE_ORDER.indexOf(project.status);
     const targetIndex = PHASE_ORDER.indexOf(targetPhase);
 
     // Prevent moving back from "ganho"
-    if (lead.status === "ganho") {
-      toast.error("Leads ganhos não podem retroceder no pipeline.");
+    if (project.status === "ganho") {
+      toast.error("Projetos ganhos não podem retroceder no pipeline.");
       return;
     }
 
-    // If moving forward, check gate (only for pipeline phases, not terminal)
+    // If moving forward, check gate
     if (targetIndex > currentIndex) {
-      const checklist = allChecklist[leadId] || [];
-      // Check all phases between current and target (exclude ganho/perdido from gate check)
+      const checklist = allChecklist[project.lead_id] || [];
       const lastGatedIndex = PHASE_ORDER.indexOf("fechamento");
       for (let i = currentIndex; i < Math.min(targetIndex, lastGatedIndex + 1); i++) {
         const phase = PHASE_ORDER[i];
@@ -95,9 +94,9 @@ export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
     }
 
     try {
-      await updateLead.mutateAsync({ id: leadId, status: targetPhase as LeadStatus });
+      await updateProject.mutateAsync({ id: projectId, status: targetPhase as any });
     } catch {
-      toast.error("Erro ao mover lead.");
+      toast.error("Erro ao mover projeto.");
     }
   };
 
@@ -109,7 +108,7 @@ export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
           phase={phase}
           label={label}
           color={color}
-          leads={leadsByPhase[phase] || []}
+          projects={projectsByPhase[phase] || []}
           allChecklist={allChecklist}
           onDrop={handleDrop}
           onCardClick={onCardClick}

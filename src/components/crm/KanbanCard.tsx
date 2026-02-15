@@ -1,22 +1,15 @@
-import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck, Trophy, XCircle } from "lucide-react";
+import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Lead } from "@/hooks/useLeads";
+import type { Project } from "@/hooks/useProjects";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
 import { getPhaseCompletionCount } from "@/hooks/useLeadChecklist";
 import { differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface KanbanCardProps {
-  lead: Lead;
+  project: Project;
   checklist: ChecklistItem[];
   onClick: () => void;
-}
-
-function formatCnpj(cnpj: string | null) {
-  if (!cnpj) return null;
-  const d = cnpj.replace(/\D/g, "");
-  if (d.length !== 14) return cnpj;
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
 function formatValue(val: number | null) {
@@ -54,24 +47,23 @@ function borderClass(nextActionDate: string | null) {
   return "border";
 }
 
-export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
-  const { completed, total } = getPhaseCompletionCount(checklist, lead.status);
-  const dealValue = formatValue(lead.deal_value);
-  const cnpj = formatCnpj(lead.cnpj);
-  const icp = icpBadge(lead.icp_score);
-  const tis = timeInStage(lead.updated_at);
-  const bantScore = [lead.has_budget, lead.has_authority, lead.has_need, lead.has_timeline].filter(Boolean).length;
-  const isZombie = !lead.next_action;
+export function KanbanCard({ project, checklist, onClick }: KanbanCardProps) {
+  const { completed, total } = getPhaseCompletionCount(checklist, project.status);
+  const dealValue = formatValue(project.deal_value);
+  const icp = icpBadge(project.icp_score);
+  const tis = timeInStage(project.updated_at);
+  const bantScore = [project.has_budget, project.has_authority, project.has_need, project.has_timeline].filter(Boolean).length;
+  const isZombie = !project.next_action;
 
-  const isGanho = lead.status === "ganho";
-  const isPerdido = lead.status === "perdido";
+  const isGanho = project.status === "ganho";
+  const isPerdido = project.status === "perdido";
 
   return (
     <div
       draggable={!isGanho}
       onDragStart={(e) => {
         if (isGanho) { e.preventDefault(); return; }
-        e.dataTransfer.setData("text/plain", lead.id);
+        e.dataTransfer.setData("text/plain", project.id);
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={onClick}
@@ -80,14 +72,17 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
         isGanho ? "cursor-default ring-2 ring-emerald-400/50 bg-emerald-50/50 dark:bg-emerald-950/20" :
         isPerdido ? "cursor-grab active:cursor-grabbing opacity-60" :
         "cursor-grab active:cursor-grabbing",
-        !isGanho && !isPerdido && borderClass(lead.next_action_date)
+        !isGanho && !isPerdido && borderClass(project.next_action_date)
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-medium text-sm truncate">{lead.company_name}</p>
-          {cnpj && (
-            <p className="text-xs text-muted-foreground font-mono truncate">{cnpj}</p>
+          <p className="font-medium text-sm truncate">{project.name}</p>
+          {project.company_name && (
+            <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+              <Building2 className="h-2.5 w-2.5 shrink-0" />
+              {project.company_name}
+            </p>
           )}
         </div>
         <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
@@ -132,16 +127,16 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
         )}
       </div>
 
-      {lead.probability != null && (
+      {project.probability != null && (
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Probabilidade</span>
-            <span className="font-medium">{lead.probability}%</span>
+            <span className="font-medium">{project.probability}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${probColor(lead.probability)}`}
-              style={{ width: `${lead.probability}%` }}
+              className={`h-full rounded-full transition-all ${probColor(project.probability)}`}
+              style={{ width: `${project.probability}%` }}
             />
           </div>
         </div>
