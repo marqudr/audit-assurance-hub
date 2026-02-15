@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Loader2 } from "lucide-react";
+import { formatBRL, parseBRL } from "./NewLeadModal";
 import { useUpdateLead, type Lead } from "@/hooks/useLeads";
 import { toast } from "sonner";
 
@@ -23,7 +24,7 @@ function formatCurrency(value: number): string {
 
 export function TaxSimulator({ lead }: TaxSimulatorProps) {
   const [headcount, setHeadcount] = useState(lead.engineering_headcount?.toString() || "");
-  const [budget, setBudget] = useState(lead.rd_annual_budget?.toString() || "");
+  const [budget, setBudget] = useState(lead.rd_annual_budget ? formatBRL((lead.rd_annual_budget * 100).toString()) : "");
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState<{ min: number; max: number } | null>(
     lead.estimated_benefit_min && lead.estimated_benefit_max
@@ -33,7 +34,7 @@ export function TaxSimulator({ lead }: TaxSimulatorProps) {
   const updateLead = useUpdateLead();
 
   const handleSimulate = async () => {
-    const budgetNum = parseFloat(budget);
+    const budgetNum = parseBRL(budget);
     if (!budgetNum || budgetNum <= 0) {
       toast.error("Informe um orçamento válido.");
       return;
@@ -75,13 +76,12 @@ export function TaxSimulator({ lead }: TaxSimulatorProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="budget">Orçamento Anual de P&D (R$)</Label>
+          <Label htmlFor="budget">Orçamento Anual de P&D</Label>
           <Input
             id="budget"
-            type="number"
-            placeholder="Ex: 5000000"
+            placeholder="R$ 0,00"
             value={budget}
-            onChange={(e) => setBudget(e.target.value)}
+            onChange={(e) => setBudget(formatBRL(e.target.value))}
           />
         </div>
       </div>

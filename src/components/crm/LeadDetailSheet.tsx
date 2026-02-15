@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Loader2, MapPin, User, Pencil, X, Check } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
-import { formatPhone } from "./NewLeadModal";
+import { formatPhone, formatBRL } from "./NewLeadModal";
 import { useLeadContacts, useCreateLeadContact, useDeleteLeadContact, useUpdateLead, type Lead, type LeadStatus } from "@/hooks/useLeads";
 import { toast } from "sonner";
 
@@ -232,7 +232,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                 </div>
                 <div className="space-y-2">
                   <Label>Faixa de Receita</Label>
-                  <Input value={editData.revenue_range} onChange={(e) => setEditData({ ...editData, revenue_range: e.target.value })} />
+                  <Input value={editData.revenue_range} onChange={(e) => setEditData({ ...editData, revenue_range: formatBRL(e.target.value) })} placeholder="R$ 0,00" />
                 </div>
                 <div className="space-y-2">
                   <Label>Regime Tributário</Label>
