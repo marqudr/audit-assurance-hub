@@ -432,6 +432,89 @@ export type Database = {
           },
         ]
       }
+      phase_executions: {
+        Row: {
+          agent_id: string
+          completed_at: string | null
+          id: string
+          phase_number: number
+          project_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          agent_id: string
+          completed_at?: string | null
+          id?: string
+          phase_number: number
+          project_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          agent_id?: string
+          completed_at?: string | null
+          id?: string
+          phase_number?: number
+          project_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_executions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phase_executions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phase_outputs: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          phase_number: number
+          project_id: string
+          version_type: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          phase_number: number
+          project_id: string
+          version_type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          phase_number?: number
+          project_id?: string
+          version_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phase_outputs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -461,6 +544,7 @@ export type Database = {
       }
       project_attachments: {
         Row: {
+          category: string | null
           created_at: string
           file_name: string
           file_size: number | null
@@ -469,8 +553,10 @@ export type Database = {
           project_id: string
           storage_path: string
           user_id: string
+          version: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
           file_name: string
           file_size?: number | null
@@ -479,8 +565,10 @@ export type Database = {
           project_id: string
           storage_path: string
           user_id: string
+          version?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
           file_name?: string
           file_size?: number | null
@@ -489,10 +577,65 @@ export type Database = {
           project_id?: string
           storage_path?: string
           user_id?: string
+          version?: number
         }
         Relationships: [
           {
             foreignKeyName: "project_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_phases: {
+        Row: {
+          agent_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          phase_name: string
+          phase_number: number
+          project_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          phase_name: string
+          phase_number: number
+          project_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          phase_name?: string
+          phase_number?: number
+          project_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_phases_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_phases_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
