@@ -1,14 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Send, RotateCcw, Paperclip, Bot, User, Loader2, FileText, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
-
-type Msg = { role: "user" | "assistant"; content: string };
+import { useConversation, type Msg } from "@/hooks/useConversation";
 
 interface ChatPlaygroundProps {
   systemPrompt: string;
@@ -18,26 +15,13 @@ interface ChatPlaygroundProps {
   agentId: string;
 }
 
-// In-memory store to persist chat history across re-renders within the session
-const chatHistoryStore: Record<string, Msg[]> = {};
-
 export function ChatPlayground({ systemPrompt, model, temperature, agentName, agentId }: ChatPlaygroundProps) {
-  const [messages, setMessages] = useState<Msg[]>(() => chatHistoryStore[agentId] || []);
+  const { messages, setMessages, addMessage, resetConversation, isLoadingHistory } = useConversation(agentId);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  // Persist messages to in-memory store
-  useEffect(() => {
-    chatHistoryStore[agentId] = messages;
-  }, [messages, agentId]);
-
-  // Restore history when switching agents
-  useEffect(() => {
-    setMessages(chatHistoryStore[agentId] || []);
-  }, [agentId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -45,10 +29,9 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName, ag
     }
   }, [messages]);
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (abortRef.current) abortRef.current.abort();
-    setMessages([]);
-    chatHistoryStore[agentId] = [];
+    await resetConversation();
     setInput("");
     setAttachedFile(null);
     setIsLoading(false);
@@ -80,6 +63,13 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName, ag
     setInput("");
     setAttachedFile(null);
     setIsLoading(true);
+
+    // Persist user message
+    try {
+      await addMessage(userMsg);
+    } catch (e) {
+      console.error("Failed to persist user message:", e);
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -177,10 +167,18 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName, ag
           }
         }
       }
+
+      // Persist assistant message
+      if (assistantSoFar) {
+        try {
+          await addMessage({ role: "assistant", content: assistantSoFar });
+        } catch (e) {
+          console.error("Failed to persist assistant message:", e);
+        }
+      }
     } catch (e: any) {
       if (e.name !== "AbortError") {
         toast({ title: "Erro no chat", description: e.message, variant: "destructive" });
-        // Remove last assistant message if empty
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && !last.content) return prev.slice(0, -1);
@@ -199,6 +197,14 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName, ag
       sendMessage();
     }
   };
+
+  if (isLoadingHistory) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
