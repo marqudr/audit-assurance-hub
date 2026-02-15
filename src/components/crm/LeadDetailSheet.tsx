@@ -185,7 +185,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const ed = (field: string, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
 
   const readOnlySections = (
-    <Accordion type="multiple" defaultValue={["attribution", "qualification", "velocity", "revenue"]} className="w-full">
+    <Accordion type="multiple" defaultValue={["attribution", "qualification", "revenue"]} className="w-full">
       {/* Attribution */}
       <AccordionItem value="attribution">
         <AccordionTrigger className="text-sm">
@@ -239,37 +239,8 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         </AccordionContent>
       </AccordionItem>
 
-      {/* Velocity */}
-      <AccordionItem value="velocity">
-        <AccordionTrigger className="text-sm">
-          <span className="flex items-center gap-2"><Clock className="h-4 w-4" /> Velocidade e Saúde</span>
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Time in Stage</span>
-              <span className={cn("font-medium", tisColor)}>{timeInStage} dias</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Próximo Passo</span>
-              {lead.next_action ? (
-                <span className="font-medium">{lead.next_action}</span>
-              ) : (
-                <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-200">
-                  <Ghost className="h-3 w-3 mr-1" /> Zumbi
-                </Badge>
-              )}
-            </div>
-            {lead.next_action_date && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Data Próximo Passo</span>
-                <span className="font-medium">{format(new Date(lead.next_action_date), "dd/MM/yyyy")}</span>
-              </div>
-            )}
-            <div><span className="text-muted-foreground">Conteúdo Consumido</span><p className="font-medium text-sm mt-1">{lead.content_consumed || "—"}</p></div>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+
+
 
       {/* Revenue */}
       <AccordionItem value="revenue">
@@ -289,7 +260,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   );
 
   const editSections = (
-    <Accordion type="multiple" defaultValue={["attribution", "qualification", "velocity", "revenue"]} className="w-full">
+    <Accordion type="multiple" defaultValue={["attribution", "qualification", "revenue"]} className="w-full">
       {/* Attribution Edit */}
       <AccordionItem value="attribution">
         <AccordionTrigger className="text-sm">
@@ -360,34 +331,8 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         </AccordionContent>
       </AccordionItem>
 
-      {/* Velocity Edit */}
-      <AccordionItem value="velocity">
-        <AccordionTrigger className="text-sm">
-          <span className="flex items-center gap-2"><Clock className="h-4 w-4" /> Velocidade e Saúde</span>
-        </AccordionTrigger>
-        <AccordionContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Time in Stage</span>
-              <span className={cn("font-medium", tisColor)}>{timeInStage} dias</span>
-            </div>
-            <div className="space-y-1"><Label className="text-xs">Próximo Passo</Label><Input value={editData.next_action} onChange={(e) => ed("next_action", e.target.value)} placeholder="Ex: Enviar proposta técnica" /></div>
-            <div className="space-y-1">
-              <Label className="text-xs">Data Próximo Passo</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.next_action_date && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editData.next_action_date ? format(editData.next_action_date, "dd/MM/yyyy") : "Selecione"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date} onSelect={(d) => ed("next_action_date", d)} locale={ptBR} /></PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-1"><Label className="text-xs">Conteúdo Consumido</Label><Textarea value={editData.content_consumed} onChange={(e) => ed("content_consumed", e.target.value)} placeholder="Whitepapers, webinars..." rows={2} /></div>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
+
+
 
       {/* Revenue Edit */}
       <AccordionItem value="revenue">
@@ -534,9 +479,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
             </div>
           )}
 
-          {/* Enrichment Sections */}
+          {/* Simulador de Potencial Fiscal */}
           <Separator />
-          {!editing ? readOnlySections : editSections}
+          <TaxSimulator lead={lead} />
 
           {/* Contatos */}
           <Separator />
@@ -577,11 +522,64 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
             )}
           </div>
 
+          {/* Enrichment Sections */}
+          <Separator />
+          {!editing ? readOnlySections : editSections}
+
+          {/* Phase Checklist */}
           <Separator />
           <PhaseChecklist leadId={lead.id} phase={lead.status} />
 
+          {/* Velocidade e Saúde — por último */}
           <Separator />
-          <TaxSimulator lead={lead} />
+          {!editing ? (
+            <div className="space-y-3 text-sm">
+              <h4 className="text-sm font-semibold flex items-center gap-2"><Clock className="h-4 w-4" /> Velocidade e Saúde</h4>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Time in Stage</span>
+                <span className={cn("font-medium", tisColor)}>{timeInStage} dias</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Próximo Passo</span>
+                {lead.next_action ? (
+                  <span className="font-medium">{lead.next_action}</span>
+                ) : (
+                  <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-200">
+                    <Ghost className="h-3 w-3 mr-1" /> Zumbi
+                  </Badge>
+                )}
+              </div>
+              {lead.next_action_date && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Data Próximo Passo</span>
+                  <span className="font-medium">{format(new Date(lead.next_action_date), "dd/MM/yyyy")}</span>
+                </div>
+              )}
+              <div><span className="text-muted-foreground">Conteúdo Consumido</span><p className="font-medium text-sm mt-1">{lead.content_consumed || "—"}</p></div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold flex items-center gap-2"><Clock className="h-4 w-4" /> Velocidade e Saúde</h4>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Time in Stage</span>
+                <span className={cn("font-medium", tisColor)}>{timeInStage} dias</span>
+              </div>
+              <div className="space-y-1"><Label className="text-xs">Próximo Passo</Label><Input value={editData.next_action} onChange={(e) => ed("next_action", e.target.value)} placeholder="Ex: Enviar proposta técnica" /></div>
+              <div className="space-y-1">
+                <Label className="text-xs">Data Próximo Passo</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.next_action_date && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editData.next_action_date ? format(editData.next_action_date, "dd/MM/yyyy") : "Selecione"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date} onSelect={(d) => ed("next_action_date", d)} locale={ptBR} /></PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-1"><Label className="text-xs">Conteúdo Consumido</Label><Textarea value={editData.content_consumed} onChange={(e) => ed("content_consumed", e.target.value)} placeholder="Whitepapers, webinars..." rows={2} /></div>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
