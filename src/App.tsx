@@ -5,12 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import CRM from "./pages/CRM";
 import Operations from "./pages/Operations";
 import AgentStudio from "./pages/AgentStudio";
 import AgentForm from "./pages/AgentForm";
+import AgentSpace from "./pages/AgentSpace";
 import SettingsPage from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -36,9 +38,10 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/operations" element={<Operations />} />
-              <Route path="/agent-studio" element={<AgentStudio />} />
-              <Route path="/agent-studio/new" element={<AgentForm />} />
-              <Route path="/agent-studio/:id" element={<AgentForm />} />
+              <Route path="/agent-space" element={<AgentSpace />} />
+              <Route path="/agent-studio" element={<AdminRoute><AgentStudio /></AdminRoute>} />
+              <Route path="/agent-studio/new" element={<AdminRoute><AgentForm /></AdminRoute>} />
+              <Route path="/agent-studio/:id" element={<AdminRoute><AgentForm /></AdminRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
