@@ -179,7 +179,7 @@ const CRM = () => {
         <CrmEnergyMetrics leads={leads} onCardClick={handleLeadClick} />
       </div>
 
-      <CrmRecentActivity leads={leads} onCardClick={handleLeadClick} />
+      
 
       {/* Tabs: Tabela | Pipeline */}
       <Tabs defaultValue="pipeline">
@@ -283,7 +283,7 @@ const CRM = () => {
               )}
             </SheetTitle>
           </SheetHeader>
-          <div className="mt-4">
+          <div className="mt-4 space-y-6">
             <CrmActionAlerts
               leads={leads}
               onCardClick={(lead) => {
@@ -292,6 +292,15 @@ const CRM = () => {
               }}
               inline
             />
+            <div className="border-t pt-4">
+              <CrmRecentActivity
+                leads={leads}
+                onCardClick={(lead) => {
+                  setAlertsOpen(false);
+                  handleLeadClick(lead);
+                }}
+              />
+            </div>
           </div>
         </SheetContent>
       </Sheet>
