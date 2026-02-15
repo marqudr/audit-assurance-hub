@@ -43,7 +43,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </CommandItem>
           <CommandItem onSelect={() => handleSelect("/crm")}>
             <Users className="mr-2 h-4 w-4" />
-            CRM
+            CRM — Vendas & Originação
           </CommandItem>
           <CommandItem onSelect={() => handleSelect("/operations")}>
             <FolderKanban className="mr-2 h-4 w-4" />

@@ -120,6 +120,57 @@ export type Database = {
           },
         ]
       }
+      leads: {
+        Row: {
+          cnae: string | null
+          cnpj: string | null
+          company_name: string
+          created_at: string
+          engineering_headcount: number | null
+          estimated_benefit_max: number | null
+          estimated_benefit_min: number | null
+          id: string
+          rd_annual_budget: number | null
+          revenue_range: string | null
+          sector: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cnae?: string | null
+          cnpj?: string | null
+          company_name: string
+          created_at?: string
+          engineering_headcount?: number | null
+          estimated_benefit_max?: number | null
+          estimated_benefit_min?: number | null
+          id?: string
+          rd_annual_budget?: number | null
+          revenue_range?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cnae?: string | null
+          cnpj?: string | null
+          company_name?: string
+          created_at?: string
+          engineering_headcount?: number | null
+          estimated_benefit_max?: number | null
+          estimated_benefit_min?: number | null
+          id?: string
+          rd_annual_budget?: number | null
+          revenue_range?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -216,6 +267,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "closer" | "consultor" | "cfo" | "user"
+      lead_status: "novo" | "qualificado" | "proposta" | "ganho"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -344,6 +396,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "closer", "consultor", "cfo", "user"],
+      lead_status: ["novo", "qualificado", "proposta", "ganho"],
     },
   },
 } as const
