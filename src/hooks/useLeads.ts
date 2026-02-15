@@ -47,6 +47,10 @@ export interface Lead {
   next_action: string | null;
   next_action_date: string | null;
   content_consumed: string | null;
+  // Interaction history
+  last_contacted_date: string | null;
+  last_activity_type: string | null;
+  next_activity_date: string | null;
   // Revenue
   estimated_ltv: number | null;
   expected_close_date: string | null;
