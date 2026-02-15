@@ -92,7 +92,7 @@ export function KanbanBoard({ leads, onCardClick }: KanbanBoardProps) {
   };
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="flex gap-3 w-full pb-4">
       {PIPELINE_PHASES.map(({ phase, label, color }) => (
         <KanbanColumn
           key={phase}

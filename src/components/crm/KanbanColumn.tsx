@@ -36,7 +36,7 @@ export function KanbanColumn({
 
   return (
     <div
-      className={`flex flex-col min-w-[260px] w-[260px] rounded-lg border bg-muted/30 transition-colors ${
+      className={`flex flex-col flex-1 min-w-[200px] rounded-lg border bg-muted/30 transition-colors ${
         dragOver ? "ring-2 ring-primary border-dashed border-primary" : ""
       }`}
       onDragOver={(e) => {
