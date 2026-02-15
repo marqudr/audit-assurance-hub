@@ -17,13 +17,29 @@ export interface Lead {
   rd_annual_budget: number | null;
   estimated_benefit_min: number | null;
   estimated_benefit_max: number | null;
+  address_street: string | null;
+  address_number: string | null;
+  address_complement: string | null;
+  address_neighborhood: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_zip: string | null;
   created_at: string;
   updated_at: string;
 }
 
+export interface LeadContact {
+  id: string;
+  lead_id: string;
+  name: string;
+  role: string | null;
+  phone: string | null;
+  email: string | null;
+  created_at: string;
+}
+
 export function useLeads() {
   const { user } = useAuth();
-
   return useQuery({
     queryKey: ["leads", user?.id],
     queryFn: async () => {
@@ -38,6 +54,22 @@ export function useLeads() {
   });
 }
 
+export function useLeadContacts(leadId: string | undefined) {
+  return useQuery({
+    queryKey: ["lead-contacts", leadId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lead_contacts")
+        .select("*")
+        .eq("lead_id", leadId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data as LeadContact[];
+    },
+    enabled: !!leadId,
+  });
+}
+
 export function useCreateLead() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -49,6 +81,13 @@ export function useCreateLead() {
       cnae?: string;
       sector?: string;
       revenue_range?: string;
+      address_street?: string;
+      address_number?: string;
+      address_complement?: string;
+      address_neighborhood?: string;
+      address_city?: string;
+      address_state?: string;
+      address_zip?: string;
     }) => {
       const { data, error } = await supabase
         .from("leads")
@@ -56,10 +95,49 @@ export function useCreateLead() {
         .select()
         .single();
       if (error) throw error;
-      return data;
+      return data as Lead;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
+    },
+  });
+}
+
+export function useCreateLeadContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (contact: {
+      lead_id: string;
+      name: string;
+      role?: string;
+      phone?: string;
+      email?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("lead_contacts")
+        .insert(contact)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as LeadContact;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["lead-contacts", variables.lead_id] });
+    },
+  });
+}
+
+export function useDeleteLeadContact() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, lead_id }: { id: string; lead_id: string }) => {
+      const { error } = await supabase.from("lead_contacts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["lead-contacts", variables.lead_id] });
     },
   });
 }
@@ -68,10 +146,7 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...updates
-    }: Partial<Lead> & { id: string }) => {
+    mutationFn: async ({ id, ...updates }: Partial<Lead> & { id: string }) => {
       const { data, error } = await supabase
         .from("leads")
         .update(updates)
