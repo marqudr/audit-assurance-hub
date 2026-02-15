@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import CRM from "./pages/CRM";
 import Operations from "./pages/Operations";
 import AgentStudio from "./pages/AgentStudio";
+import AgentForm from "./pages/AgentForm";
 import SettingsPage from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -36,6 +37,8 @@ const App = () => (
               <Route path="/crm" element={<CRM />} />
               <Route path="/operations" element={<Operations />} />
               <Route path="/agent-studio" element={<AgentStudio />} />
+              <Route path="/agent-studio/new" element={<AgentForm />} />
+              <Route path="/agent-studio/:id" element={<AgentForm />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
