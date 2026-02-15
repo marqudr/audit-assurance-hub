@@ -120,6 +120,44 @@ export type Database = {
           },
         ]
       }
+      lead_checklist_items: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          item_key: string
+          lead_id: string
+          phase: Database["public"]["Enums"]["lead_status"]
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_key: string
+          lead_id: string
+          phase: Database["public"]["Enums"]["lead_status"]
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          item_key?: string
+          lead_id?: string
+          phase?: Database["public"]["Enums"]["lead_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_checklist_items_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_contacts: {
         Row: {
           created_at: string
@@ -171,11 +209,13 @@ export type Database = {
           cnpj: string | null
           company_name: string
           created_at: string
+          deal_value: number | null
           engineering_headcount: number | null
           estimated_benefit_max: number | null
           estimated_benefit_min: number | null
           fiscal_regime: string | null
           id: string
+          probability: number | null
           rd_annual_budget: number | null
           revenue_range: string | null
           sector: string | null
@@ -196,11 +236,13 @@ export type Database = {
           cnpj?: string | null
           company_name: string
           created_at?: string
+          deal_value?: number | null
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
           fiscal_regime?: string | null
           id?: string
+          probability?: number | null
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
@@ -221,11 +263,13 @@ export type Database = {
           cnpj?: string | null
           company_name?: string
           created_at?: string
+          deal_value?: number | null
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
           fiscal_regime?: string | null
           id?: string
+          probability?: number | null
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
@@ -332,7 +376,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "closer" | "consultor" | "cfo" | "user"
-      lead_status: "novo" | "qualificado" | "proposta" | "ganho"
+      lead_status:
+        | "novo"
+        | "qualificado"
+        | "proposta"
+        | "ganho"
+        | "prospeccao"
+        | "qualificacao"
+        | "diagnostico"
+        | "fechamento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -461,7 +513,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "closer", "consultor", "cfo", "user"],
-      lead_status: ["novo", "qualificado", "proposta", "ganho"],
+      lead_status: [
+        "novo",
+        "qualificado",
+        "proposta",
+        "ganho",
+        "prospeccao",
+        "qualificacao",
+        "diagnostico",
+        "fechamento",
+      ],
     },
   },
 } as const
