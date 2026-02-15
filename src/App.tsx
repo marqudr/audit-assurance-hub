@@ -13,6 +13,7 @@ import Operations from "./pages/Operations";
 import AgentStudio from "./pages/AgentStudio";
 import AgentForm from "./pages/AgentForm";
 import AgentSpace from "./pages/AgentSpace";
+import OperationsWorkspace from "./pages/OperationsWorkspace";
 import SettingsPage from "./pages/Settings";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/operations" element={<Operations />} />
+              <Route path="/operations/:projectId" element={<OperationsWorkspace />} />
               <Route path="/agent-space" element={<AgentSpace />} />
               <Route path="/agent-studio" element={<AdminRoute><AgentStudio /></AdminRoute>} />
               <Route path="/agent-studio/new" element={<AdminRoute><AgentForm /></AdminRoute>} />
