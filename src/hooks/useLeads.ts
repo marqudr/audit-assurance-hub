@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-export type LeadStatus = "novo" | "qualificado" | "proposta" | "ganho";
+export type LeadStatus = "novo" | "qualificado" | "proposta" | "ganho" | "prospeccao" | "qualificacao" | "diagnostico" | "fechamento";
 
 export interface Lead {
   id: string;
@@ -26,6 +26,8 @@ export interface Lead {
   address_zip: string | null;
   tax_regime: string | null;
   fiscal_regime: string | null;
+  probability: number | null;
+  deal_value: number | null;
   created_at: string;
   updated_at: string;
 }
