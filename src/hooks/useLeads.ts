@@ -35,6 +35,8 @@ export interface Lead {
   estimated_cac: number | null;
   // Qualification
   icp_score: number | null;
+  has_lucro_fiscal: boolean;
+  has_regularidade_fiscal: boolean;
   qualification_method: string | null;
   has_budget: boolean;
   has_authority: boolean;

@@ -273,7 +273,9 @@ export type Database = {
           fiscal_regime: string | null
           has_authority: boolean
           has_budget: boolean
+          has_lucro_fiscal: boolean
           has_need: boolean
+          has_regularidade_fiscal: boolean
           has_timeline: boolean
           icp_score: number | null
           id: string
@@ -321,7 +323,9 @@ export type Database = {
           fiscal_regime?: string | null
           has_authority?: boolean
           has_budget?: boolean
+          has_lucro_fiscal?: boolean
           has_need?: boolean
+          has_regularidade_fiscal?: boolean
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
@@ -369,7 +373,9 @@ export type Database = {
           fiscal_regime?: string | null
           has_authority?: boolean
           has_budget?: boolean
+          has_lucro_fiscal?: boolean
           has_need?: boolean
+          has_regularidade_fiscal?: boolean
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
@@ -508,6 +514,11 @@ export type Database = {
           estimated_ltv: number | null
           expected_close_date: string | null
           first_touch_channel: string | null
+          frascati_criatividade: boolean
+          frascati_incerteza: boolean
+          frascati_novidade: boolean
+          frascati_sistematicidade: boolean
+          frascati_transferibilidade: boolean
           has_authority: boolean
           has_budget: boolean
           has_need: boolean
@@ -545,6 +556,11 @@ export type Database = {
           estimated_ltv?: number | null
           expected_close_date?: string | null
           first_touch_channel?: string | null
+          frascati_criatividade?: boolean
+          frascati_incerteza?: boolean
+          frascati_novidade?: boolean
+          frascati_sistematicidade?: boolean
+          frascati_transferibilidade?: boolean
           has_authority?: boolean
           has_budget?: boolean
           has_need?: boolean
@@ -582,6 +598,11 @@ export type Database = {
           estimated_ltv?: number | null
           expected_close_date?: string | null
           first_touch_channel?: string | null
+          frascati_criatividade?: boolean
+          frascati_incerteza?: boolean
+          frascati_novidade?: boolean
+          frascati_sistematicidade?: boolean
+          frascati_transferibilidade?: boolean
           has_authority?: boolean
           has_budget?: boolean
           has_need?: boolean

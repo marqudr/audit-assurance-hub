@@ -17,11 +17,13 @@ export const PHASE_CHECKLIST: Record<string, { key: string; label: string }[]> =
     { key: "contato_decisor", label: "Contato decisor identificado" },
     { key: "cnpj_validado", label: "CNPJ validado" },
     { key: "setor_confirmado", label: "Setor confirmado" },
+    { key: "icp_score_ok", label: "ICP Score ≥ 7,5 (Elegibilidade confirmada)" },
   ],
   qualificacao: [
     { key: "regime_tributario", label: "Regime tributário definido" },
     { key: "faixa_receita", label: "Faixa de receita preenchida" },
     { key: "reuniao_qualificacao", label: "Reunião de qualificação realizada" },
+    { key: "frascati_completo", label: "Filtro Frascati completo (5/5)" },
   ],
   diagnostico: [
     { key: "headcount_engenharia", label: "Headcount de engenharia informado" },
