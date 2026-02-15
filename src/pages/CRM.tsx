@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, DollarSign, TrendingUp, Plus, Eye, LayoutGrid, TableIcon } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Users, DollarSign, TrendingUp, Plus, Eye, LayoutGrid, TableIcon, ClipboardList } from "lucide-react";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 import { NewLeadModal } from "@/components/crm/NewLeadModal";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
@@ -20,6 +21,9 @@ import { CrmActionAlerts } from "@/components/crm/CrmActionAlerts";
 import { CrmPipelineMetrics } from "@/components/crm/CrmPipelineMetrics";
 import { CrmEnergyMetrics } from "@/components/crm/CrmEnergyMetrics";
 import { CrmRecentActivity } from "@/components/crm/CrmRecentActivity";
+import { differenceInDays } from "date-fns";
+
+// ... keep existing code (statusConfig, formatDate, formatCnpj)
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
@@ -29,7 +33,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   fechamento: { label: "Fechamento", className: "bg-green-100 text-green-800 border-green-200" },
   ganho: { label: "Ganho", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
   perdido: { label: "Perdido", className: "bg-red-100 text-red-800 border-red-200" },
-  // Legacy fallbacks
   novo: { label: "Novo", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificado: { label: "Qualificado", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
 };
@@ -49,21 +52,46 @@ function formatCnpj(cnpj: string | null) {
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
+const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
+
 const CRM = () => {
   const { data: leads = [], isLoading } = useLeads();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [alertsOpen, setAlertsOpen] = useState(false);
 
   const activeLeads = leads.filter((l) => l.status !== "ganho" && l.status !== "perdido").length;
   const totalDealValue = leads.reduce((sum, l) => sum + (l.deal_value || 0), 0);
   const totalBudget = leads.reduce((sum, l) => sum + (l.deal_value || l.rd_annual_budget || 0), 0);
   const avgDeal = leads.length > 0 ? totalBudget / leads.length : 0;
 
+  // Count total alerts for the badge
+  const alertCount = useMemo(() => {
+    const active = leads.filter((l) => ACTIVE_STATUSES.includes(l.status));
+    const noContact = active.filter((l) => l.status === "prospeccao" && !l.last_contacted_date).length;
+    const now = new Date();
+    const overdue = active.filter((l) => {
+      const d1 = l.next_activity_date ? new Date(l.next_activity_date) : null;
+      const d2 = l.next_action_date ? new Date(l.next_action_date) : null;
+      return (d1 && d1 < now) || (d2 && d2 < now);
+    }).length;
+    const stalled = active.filter((l) => {
+      const days = l.last_contacted_date ? differenceInDays(now, new Date(l.last_contacted_date)) : 999;
+      return days >= 3;
+    }).length;
+    return noContact + overdue + stalled;
+  }, [leads]);
+
   const formatMetric = (val: number) => {
     if (val >= 1_000_000) return `R$ ${(val / 1_000_000).toFixed(1).replace(".", ",")}M`;
     if (val >= 1_000) return `R$ ${(val / 1_000).toFixed(0)}K`;
     return `R$ ${val.toFixed(0)}`;
+  };
+
+  const handleLeadClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setSheetOpen(true);
   };
 
   return (
@@ -73,22 +101,28 @@ const CRM = () => {
           <h1 className="text-2xl font-semibold tracking-tight">CRM — Vendas & Originação</h1>
           <p className="text-sm text-muted-foreground">Pipeline de vendas e gestão de leads</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Lead
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* Alerts icon button */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="relative"
+            onClick={() => setAlertsOpen(true)}
+          >
+            <ClipboardList className="h-5 w-5" />
+            {alertCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+                {alertCount > 99 ? "99+" : alertCount}
+              </span>
+            )}
+          </Button>
+          <Button onClick={() => setModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Lead
+          </Button>
+        </div>
       </div>
 
-      {/* Dashboard Operacional */}
-      <CrmActionAlerts leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CrmPipelineMetrics leads={leads} />
-        <CrmEnergyMetrics leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
-      </div>
-
-      <CrmRecentActivity leads={leads} onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }} />
-
-      {/* Métricas */}
+      {/* Métricas no topo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
@@ -139,6 +173,14 @@ const CRM = () => {
         </Card>
       </div>
 
+      {/* Dashboard Operacional */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <CrmPipelineMetrics leads={leads} />
+        <CrmEnergyMetrics leads={leads} onCardClick={handleLeadClick} />
+      </div>
+
+      <CrmRecentActivity leads={leads} onCardClick={handleLeadClick} />
+
       {/* Tabs: Tabela | Pipeline */}
       <Tabs defaultValue="pipeline">
         <TabsList>
@@ -151,10 +193,7 @@ const CRM = () => {
         </TabsList>
 
         <TabsContent value="pipeline">
-          <KanbanBoard
-            leads={leads}
-            onCardClick={(lead) => { setSelectedLead(lead); setSheetOpen(true); }}
-          />
+          <KanbanBoard leads={leads} onCardClick={handleLeadClick} />
         </TabsContent>
 
         <TabsContent value="tabela">
@@ -191,7 +230,7 @@ const CRM = () => {
                         <TableRow
                           key={lead.id}
                           className="group cursor-pointer"
-                          onClick={() => { setSelectedLead(lead); setSheetOpen(true); }}
+                          onClick={() => handleLeadClick(lead)}
                         >
                           <TableCell className="font-medium">{lead.company_name}</TableCell>
                           <TableCell className="text-muted-foreground text-xs font-mono">
@@ -215,8 +254,7 @@ const CRM = () => {
                               className="opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedLead(lead);
-                                setSheetOpen(true);
+                                handleLeadClick(lead);
                               }}
                             >
                               <Eye className="h-4 w-4 mr-1" /> Ver Detalhes
@@ -232,6 +270,31 @@ const CRM = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Alerts side panel */}
+      <Sheet open={alertsOpen} onOpenChange={setAlertsOpen}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />
+              O que eu faço agora?
+              {alertCount > 0 && (
+                <Badge variant="destructive" className="text-xs">{alertCount}</Badge>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-4">
+            <CrmActionAlerts
+              leads={leads}
+              onCardClick={(lead) => {
+                setAlertsOpen(false);
+                handleLeadClick(lead);
+              }}
+              inline
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <NewLeadModal open={modalOpen} onOpenChange={setModalOpen} />
       <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} />
