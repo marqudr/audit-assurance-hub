@@ -41,6 +41,8 @@ export interface Lead {
   has_need: boolean;
   has_timeline: boolean;
   pain_points: string | null;
+  context: string | null;
+  objection: string | null;
   // Velocity
   next_action: string | null;
   next_action_date: string | null;

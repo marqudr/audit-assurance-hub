@@ -209,6 +209,7 @@ export type Database = {
           cnpj: string | null
           company_name: string
           content_consumed: string | null
+          context: string | null
           created_at: string
           deal_value: number | null
           engineering_headcount: number | null
@@ -228,6 +229,7 @@ export type Database = {
           last_touch_channel: string | null
           next_action: string | null
           next_action_date: string | null
+          objection: string | null
           pain_points: string | null
           probability: number | null
           qualification_method: string | null
@@ -252,6 +254,7 @@ export type Database = {
           cnpj?: string | null
           company_name: string
           content_consumed?: string | null
+          context?: string | null
           created_at?: string
           deal_value?: number | null
           engineering_headcount?: number | null
@@ -271,6 +274,7 @@ export type Database = {
           last_touch_channel?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          objection?: string | null
           pain_points?: string | null
           probability?: number | null
           qualification_method?: string | null
@@ -295,6 +299,7 @@ export type Database = {
           cnpj?: string | null
           company_name?: string
           content_consumed?: string | null
+          context?: string | null
           created_at?: string
           deal_value?: number | null
           engineering_headcount?: number | null
@@ -314,6 +319,7 @@ export type Database = {
           last_touch_channel?: string | null
           next_action?: string | null
           next_action_date?: string | null
+          objection?: string | null
           pain_points?: string | null
           probability?: number | null
           qualification_method?: string | null
