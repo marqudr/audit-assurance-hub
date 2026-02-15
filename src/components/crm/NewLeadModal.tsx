@@ -45,6 +45,19 @@ export function formatPhone(value: string): string {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+export function formatBRL(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  const num = parseInt(digits, 10);
+  return (num / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+export function parseBRL(formatted: string): number {
+  const digits = formatted.replace(/\D/g, "");
+  if (!digits) return 0;
+  return parseInt(digits, 10) / 100;
+}
+
 const emptyContact = (): ContactInput => ({ name: "", role: "", phone: "", email: "" });
 
 export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
