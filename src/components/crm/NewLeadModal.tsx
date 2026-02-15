@@ -159,7 +159,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Lead</DialogTitle>
         </DialogHeader>
