@@ -52,8 +52,8 @@ export default function AgentSpace() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{agent.name}</p>
                     {agent.persona && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {agent.persona.slice(0, 60)}
+                      <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-line">
+                        {agent.persona}
                       </p>
                     )}
                   </div>
