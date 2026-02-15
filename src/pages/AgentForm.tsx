@@ -55,6 +55,8 @@ export default function AgentForm() {
   const [temperature, setTemperature] = useState(0.7);
   const [model, setModel] = useState("google/gemini-3-flash-preview");
   const [status, setStatus] = useState<"active" | "inactive" | "draft">("draft");
+  // Pending files for new agents (before first save)
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const createAgent = useCreateAgent();
   const updateAgent = useUpdateAgent();
@@ -108,7 +110,14 @@ export default function AgentForm() {
     if (isEditing) {
       await updateAgent.mutateAsync({ id, ...payload });
     } else {
-      await createAgent.mutateAsync(payload as any);
+      const newAgent = await createAgent.mutateAsync(payload as any);
+      // Upload pending files to the newly created agent
+      if (pendingFiles.length > 0 && newAgent?.id) {
+        for (const file of pendingFiles) {
+          await uploadRagFile.mutateAsync({ agentId: newAgent.id, file });
+        }
+        setPendingFiles([]);
+      }
     }
     navigate("/agent-studio");
   };
@@ -122,12 +131,17 @@ export default function AgentForm() {
 
   const handleFileUpload = useCallback(
     async (files: FileList | null) => {
-      if (!files || !id) return;
-      for (const file of Array.from(files)) {
-        await uploadRagFile.mutateAsync({ agentId: id, file });
+      if (!files) return;
+      if (isEditing && id) {
+        for (const file of Array.from(files)) {
+          await uploadRagFile.mutateAsync({ agentId: id, file });
+        }
+      } else {
+        // Queue files for upload after agent creation
+        setPendingFiles((prev) => [...prev, ...Array.from(files)]);
       }
     },
-    [id, uploadRagFile]
+    [id, isEditing, uploadRagFile]
   );
 
   const handleDrop = useCallback(
@@ -217,7 +231,7 @@ export default function AgentForm() {
             {/* Identity */}
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Identity</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="agent-name" className="text-xs">Nome</Label>
                   <Input
@@ -230,12 +244,12 @@ export default function AgentForm() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="agent-persona" className="text-xs">Persona</Label>
-                  <Input
+                  <Textarea
                     id="agent-persona"
                     value={persona}
                     onChange={(e) => setPersona(e.target.value)}
-                    placeholder="Ex: Especialista em auditoria fiscal"
-                    className="h-8 text-sm"
+                    placeholder="Ex: Você é um especialista em auditoria fiscal com 20 anos de experiência..."
+                    className="min-h-[80px] text-sm"
                   />
                 </div>
               </div>
@@ -294,30 +308,59 @@ export default function AgentForm() {
             <section className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Knowledge Base (RAG)</h2>
 
-              {isEditing ? (
-                <>
-                  <div
-                    className="rounded-md border-2 border-dashed border-border hover:border-primary/40 transition-colors p-4 text-center cursor-pointer"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleDrop}
-                    onClick={() => {
-                      const input = document.createElement("input");
-                      input.type = "file";
-                      input.multiple = true;
-                      input.accept = ".pdf,.txt,.md,.csv,.json";
-                      input.onchange = (e) => handleFileUpload((e.target as HTMLInputElement).files);
-                      input.click();
-                    }}
-                  >
-                    {uploadRagFile.isPending ? (
-                      <Loader2 className="h-5 w-5 mx-auto mb-1 text-primary animate-spin" />
-                    ) : (
-                      <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-                    )}
-                    <p className="text-xs font-medium">Arraste arquivos aqui</p>
-                    <p className="text-[10px] text-muted-foreground">PDF, TXT, MD, CSV, JSON</p>
-                  </div>
+              <div
+                className="rounded-md border-2 border-dashed border-border hover:border-primary/40 transition-colors p-4 text-center cursor-pointer"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.multiple = true;
+                  input.accept = ".pdf,.txt,.md,.csv,.json";
+                  input.onchange = (e) => handleFileUpload((e.target as HTMLInputElement).files);
+                  input.click();
+                }}
+              >
+                {uploadRagFile.isPending ? (
+                  <Loader2 className="h-5 w-5 mx-auto mb-1 text-primary animate-spin" />
+                ) : (
+                  <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+                )}
+                <p className="text-xs font-medium">Arraste arquivos aqui</p>
+                <p className="text-[10px] text-muted-foreground">PDF, TXT, MD, CSV, JSON</p>
+              </div>
 
+              {/* Pending files (new agent, not yet saved) */}
+              {!isEditing && pendingFiles.length > 0 && (
+                <div className="space-y-1.5">
+                  {pendingFiles.map((f, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded-md border text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="font-medium truncate">{f.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{formatFileSize(f.size)}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-5 w-5"
+                          onClick={() => setPendingFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Serão enviados ao salvar o agente.
+                  </p>
+                </div>
+              )}
+
+              {/* Saved files (editing existing agent) */}
+              {isEditing && (
+                <>
                   {loadingFiles ? (
                     <div className="flex justify-center py-3">
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -346,14 +389,10 @@ export default function AgentForm() {
                     </div>
                   ) : (
                     <p className="text-[10px] text-muted-foreground text-center py-2">
-                      Nenhum arquivo anexado. Salve o agente primeiro para adicionar arquivos.
+                      Nenhum arquivo anexado.
                     </p>
                   )}
                 </>
-              ) : (
-                <p className="text-xs text-muted-foreground bg-muted rounded-md p-3">
-                  Salve o agente primeiro para poder adicionar documentos à base de conhecimento.
-                </p>
               )}
             </section>
           </div>
@@ -368,6 +407,7 @@ export default function AgentForm() {
             model={model}
             temperature={temperature}
             agentName={name}
+            agentId={id || "new"}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

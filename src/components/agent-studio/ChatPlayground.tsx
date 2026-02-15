@@ -14,15 +14,29 @@ interface ChatPlaygroundProps {
   model: string;
   temperature: number;
   agentName: string;
+  agentId: string;
 }
 
-export function ChatPlayground({ systemPrompt, model, temperature, agentName }: ChatPlaygroundProps) {
-  const [messages, setMessages] = useState<Msg[]>([]);
+// In-memory store to persist chat history across re-renders within the session
+const chatHistoryStore: Record<string, Msg[]> = {};
+
+export function ChatPlayground({ systemPrompt, model, temperature, agentName, agentId }: ChatPlaygroundProps) {
+  const [messages, setMessages] = useState<Msg[]>(() => chatHistoryStore[agentId] || []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Persist messages to in-memory store
+  useEffect(() => {
+    chatHistoryStore[agentId] = messages;
+  }, [messages, agentId]);
+
+  // Restore history when switching agents
+  useEffect(() => {
+    setMessages(chatHistoryStore[agentId] || []);
+  }, [agentId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -33,6 +47,7 @@ export function ChatPlayground({ systemPrompt, model, temperature, agentName }: 
   const handleReset = () => {
     if (abortRef.current) abortRef.current.abort();
     setMessages([]);
+    chatHistoryStore[agentId] = [];
     setInput("");
     setAttachedFile(null);
     setIsLoading(false);
