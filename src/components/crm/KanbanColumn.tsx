@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { KanbanCard } from "./KanbanCard";
-import type { Lead } from "@/hooks/useLeads";
+import type { Project } from "@/hooks/useProjects";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
 
 interface KanbanColumnProps {
   phase: string;
   label: string;
   color: string;
-  leads: Lead[];
+  projects: Project[];
   allChecklist: Record<string, ChecklistItem[]>;
-  onDrop: (leadId: string, targetPhase: string) => void;
-  onCardClick: (lead: Lead) => void;
+  onDrop: (projectId: string, targetPhase: string) => void;
+  onCardClick: (project: Project) => void;
 }
 
-function formatColumnValue(leads: Lead[]) {
-  const total = leads.reduce((sum, l) => sum + (l.deal_value || 0), 0);
+function formatColumnValue(projects: Project[]) {
+  const total = projects.reduce((sum, p) => sum + (p.deal_value || 0), 0);
   if (total === 0) return null;
   if (total >= 1_000_000) return `R$ ${(total / 1_000_000).toFixed(1).replace(".", ",")}M`;
   if (total >= 1_000) return `R$ ${(total / 1_000).toFixed(0)}K`;
@@ -26,13 +26,13 @@ export function KanbanColumn({
   phase,
   label,
   color,
-  leads,
+  projects,
   allChecklist,
   onDrop,
   onCardClick,
 }: KanbanColumnProps) {
   const [dragOver, setDragOver] = useState(false);
-  const totalValue = formatColumnValue(leads);
+  const totalValue = formatColumnValue(projects);
 
   return (
     <div
@@ -48,8 +48,8 @@ export function KanbanColumn({
       onDrop={(e) => {
         e.preventDefault();
         setDragOver(false);
-        const leadId = e.dataTransfer.getData("text/plain");
-        if (leadId) onDrop(leadId, phase);
+        const projectId = e.dataTransfer.getData("text/plain");
+        if (projectId) onDrop(projectId, phase);
       }}
     >
       {/* Header */}
@@ -58,7 +58,7 @@ export function KanbanColumn({
         <div className="flex items-center justify-between mt-2">
           <span className="text-sm font-semibold">{label}</span>
           <Badge variant="secondary" className="text-xs">
-            {leads.length}
+            {projects.length}
           </Badge>
         </div>
         {totalValue && (
@@ -68,17 +68,17 @@ export function KanbanColumn({
 
       {/* Cards */}
       <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[calc(100vh-320px)]">
-        {leads.map((lead) => (
+        {projects.map((project) => (
           <KanbanCard
-            key={lead.id}
-            lead={lead}
-            checklist={allChecklist[lead.id] || []}
-            onClick={() => onCardClick(lead)}
+            key={project.id}
+            project={project}
+            checklist={allChecklist[project.lead_id] || []}
+            onClick={() => onCardClick(project)}
           />
         ))}
-        {leads.length === 0 && (
+        {projects.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-8">
-            Nenhum lead
+            Nenhum projeto
           </p>
         )}
       </div>

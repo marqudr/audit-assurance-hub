@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DollarSign, Target } from "lucide-react";
-import type { Lead } from "@/hooks/useLeads";
+import type { Project } from "@/hooks/useProjects";
 
 interface CrmPipelineMetricsProps {
-  leads: Lead[];
+  projects: Project[];
 }
 
 const ACTIVE_PHASES = [
@@ -25,18 +25,18 @@ function formatBRL(val: number) {
   return `R$ ${val.toFixed(0)}`;
 }
 
-export function CrmPipelineMetrics({ leads }: CrmPipelineMetricsProps) {
+export function CrmPipelineMetrics({ projects }: CrmPipelineMetricsProps) {
   const stageData = useMemo(() => {
     return ACTIVE_PHASES.map(({ key, label, color }) => {
-      const stageLeads = leads.filter((l) => l.status === key);
-      const total = stageLeads.reduce((s, l) => s + (l.deal_value || 0), 0);
-      const weighted = stageLeads.reduce(
-        (s, l) => s + (l.deal_value || 0) * ((l.probability || 0) / 100),
+      const stageProjects = projects.filter((p) => p.status === key);
+      const total = stageProjects.reduce((s, p) => s + (p.deal_value || 0), 0);
+      const weighted = stageProjects.reduce(
+        (s, p) => s + (p.deal_value || 0) * ((p.probability || 0) / 100),
         0
       );
-      return { key, label, color, total, weighted, count: stageLeads.length };
+      return { key, label, color, total, weighted, count: stageProjects.length };
     });
-  }, [leads]);
+  }, [projects]);
 
   const totalWeighted = stageData.reduce((s, d) => s + d.weighted, 0);
 
@@ -44,14 +44,14 @@ export function CrmPipelineMetrics({ leads }: CrmPipelineMetricsProps) {
     const now = new Date();
     const month = now.getMonth();
     const year = now.getFullYear();
-    return leads
-      .filter((l) => {
-        if (l.status !== "ganho") return false;
-        const d = new Date(l.updated_at);
+    return projects
+      .filter((p) => {
+        if (p.status !== "ganho") return false;
+        const d = new Date(p.updated_at);
         return d.getMonth() === month && d.getFullYear() === year;
       })
-      .reduce((s, l) => s + (l.deal_value || 0), 0);
-  }, [leads]);
+      .reduce((s, p) => s + (p.deal_value || 0), 0);
+  }, [projects]);
 
   const goalPercent = Math.min((realized / MONTHLY_GOAL) * 100, 100);
   const goalColor = goalPercent >= 80 ? "text-green-600" : goalPercent >= 50 ? "text-yellow-600" : "text-red-600";
@@ -66,7 +66,6 @@ export function CrmPipelineMetrics({ leads }: CrmPipelineMetricsProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Bar chart */}
           <div className="lg:col-span-1">
             <p className="text-xs text-muted-foreground mb-2">Pipeline por Estágio</p>
             <div className="h-40">
@@ -88,8 +87,6 @@ export function CrmPipelineMetrics({ leads }: CrmPipelineMetricsProps) {
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Weighted pipeline */}
           <div className="flex flex-col items-center justify-center">
             <p className="text-xs text-muted-foreground mb-1">Pipeline Ponderado</p>
             <p className="text-3xl font-bold tracking-tight">{formatBRL(totalWeighted)}</p>
@@ -102,8 +99,6 @@ export function CrmPipelineMetrics({ leads }: CrmPipelineMetricsProps) {
               ))}
             </div>
           </div>
-
-          {/* Goal gap */}
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-2 mb-2">
               <Target className="h-4 w-4 text-muted-foreground" />

@@ -170,6 +170,7 @@ export type Database = {
           item_key: string
           lead_id: string
           phase: Database["public"]["Enums"]["lead_status"]
+          project_id: string | null
         }
         Insert: {
           completed?: boolean
@@ -179,6 +180,7 @@ export type Database = {
           item_key: string
           lead_id: string
           phase: Database["public"]["Enums"]["lead_status"]
+          project_id?: string | null
         }
         Update: {
           completed?: boolean
@@ -188,6 +190,7 @@ export type Database = {
           item_key?: string
           lead_id?: string
           phase?: Database["public"]["Enums"]["lead_status"]
+          project_id?: string | null
         }
         Relationships: [
           {
@@ -195,6 +198,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_checklist_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -442,6 +452,169 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      project_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          phase: Database["public"]["Enums"]["lead_status"] | null
+          project_id: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          phase?: Database["public"]["Enums"]["lead_status"] | null
+          project_id: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          phase?: Database["public"]["Enums"]["lead_status"] | null
+          project_id?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          content_consumed: string | null
+          context: string | null
+          created_at: string
+          deal_value: number | null
+          description: string | null
+          engineering_headcount: number | null
+          estimated_benefit_max: number | null
+          estimated_benefit_min: number | null
+          estimated_cac: number | null
+          estimated_ltv: number | null
+          expected_close_date: string | null
+          first_touch_channel: string | null
+          has_authority: boolean
+          has_budget: boolean
+          has_need: boolean
+          has_timeline: boolean
+          icp_score: number | null
+          id: string
+          last_activity_type: string | null
+          last_contacted_date: string | null
+          last_touch_channel: string | null
+          lead_id: string
+          name: string
+          next_action: string | null
+          next_action_date: string | null
+          next_activity_date: string | null
+          objection: string | null
+          pain_points: string | null
+          probability: number | null
+          qualification_method: string | null
+          rd_annual_budget: number | null
+          source_medium: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_consumed?: string | null
+          context?: string | null
+          created_at?: string
+          deal_value?: number | null
+          description?: string | null
+          engineering_headcount?: number | null
+          estimated_benefit_max?: number | null
+          estimated_benefit_min?: number | null
+          estimated_cac?: number | null
+          estimated_ltv?: number | null
+          expected_close_date?: string | null
+          first_touch_channel?: string | null
+          has_authority?: boolean
+          has_budget?: boolean
+          has_need?: boolean
+          has_timeline?: boolean
+          icp_score?: number | null
+          id?: string
+          last_activity_type?: string | null
+          last_contacted_date?: string | null
+          last_touch_channel?: string | null
+          lead_id: string
+          name: string
+          next_action?: string | null
+          next_action_date?: string | null
+          next_activity_date?: string | null
+          objection?: string | null
+          pain_points?: string | null
+          probability?: number | null
+          qualification_method?: string | null
+          rd_annual_budget?: number | null
+          source_medium?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_consumed?: string | null
+          context?: string | null
+          created_at?: string
+          deal_value?: number | null
+          description?: string | null
+          engineering_headcount?: number | null
+          estimated_benefit_max?: number | null
+          estimated_benefit_min?: number | null
+          estimated_cac?: number | null
+          estimated_ltv?: number | null
+          expected_close_date?: string | null
+          first_touch_channel?: string | null
+          has_authority?: boolean
+          has_budget?: boolean
+          has_need?: boolean
+          has_timeline?: boolean
+          icp_score?: number | null
+          id?: string
+          last_activity_type?: string | null
+          last_contacted_date?: string | null
+          last_touch_channel?: string | null
+          lead_id?: string
+          name?: string
+          next_action?: string | null
+          next_action_date?: string | null
+          next_activity_date?: string | null
+          objection?: string | null
+          pain_points?: string | null
+          probability?: number | null
+          qualification_method?: string | null
+          rd_annual_budget?: number | null
+          source_medium?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
