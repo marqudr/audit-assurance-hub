@@ -28,6 +28,26 @@ export interface Lead {
   fiscal_regime: string | null;
   probability: number | null;
   deal_value: number | null;
+  // Attribution
+  source_medium: string | null;
+  first_touch_channel: string | null;
+  last_touch_channel: string | null;
+  estimated_cac: number | null;
+  // Qualification
+  icp_score: number | null;
+  qualification_method: string | null;
+  has_budget: boolean;
+  has_authority: boolean;
+  has_need: boolean;
+  has_timeline: boolean;
+  pain_points: string | null;
+  // Velocity
+  next_action: string | null;
+  next_action_date: string | null;
+  content_consumed: string | null;
+  // Revenue
+  estimated_ltv: number | null;
+  expected_close_date: string | null;
   created_at: string;
   updated_at: string;
 }

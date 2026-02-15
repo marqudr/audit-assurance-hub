@@ -208,17 +208,33 @@ export type Database = {
           cnae: string | null
           cnpj: string | null
           company_name: string
+          content_consumed: string | null
           created_at: string
           deal_value: number | null
           engineering_headcount: number | null
           estimated_benefit_max: number | null
           estimated_benefit_min: number | null
+          estimated_cac: number | null
+          estimated_ltv: number | null
+          expected_close_date: string | null
+          first_touch_channel: string | null
           fiscal_regime: string | null
+          has_authority: boolean
+          has_budget: boolean
+          has_need: boolean
+          has_timeline: boolean
+          icp_score: number | null
           id: string
+          last_touch_channel: string | null
+          next_action: string | null
+          next_action_date: string | null
+          pain_points: string | null
           probability: number | null
+          qualification_method: string | null
           rd_annual_budget: number | null
           revenue_range: string | null
           sector: string | null
+          source_medium: string | null
           status: Database["public"]["Enums"]["lead_status"]
           tax_regime: string | null
           updated_at: string
@@ -235,17 +251,33 @@ export type Database = {
           cnae?: string | null
           cnpj?: string | null
           company_name: string
+          content_consumed?: string | null
           created_at?: string
           deal_value?: number | null
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
+          estimated_cac?: number | null
+          estimated_ltv?: number | null
+          expected_close_date?: string | null
+          first_touch_channel?: string | null
           fiscal_regime?: string | null
+          has_authority?: boolean
+          has_budget?: boolean
+          has_need?: boolean
+          has_timeline?: boolean
+          icp_score?: number | null
           id?: string
+          last_touch_channel?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
+          pain_points?: string | null
           probability?: number | null
+          qualification_method?: string | null
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
+          source_medium?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           tax_regime?: string | null
           updated_at?: string
@@ -262,17 +294,33 @@ export type Database = {
           cnae?: string | null
           cnpj?: string | null
           company_name?: string
+          content_consumed?: string | null
           created_at?: string
           deal_value?: number | null
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
+          estimated_cac?: number | null
+          estimated_ltv?: number | null
+          expected_close_date?: string | null
+          first_touch_channel?: string | null
           fiscal_regime?: string | null
+          has_authority?: boolean
+          has_budget?: boolean
+          has_need?: boolean
+          has_timeline?: boolean
+          icp_score?: number | null
           id?: string
+          last_touch_channel?: string | null
+          next_action?: string | null
+          next_action_date?: string | null
+          pain_points?: string | null
           probability?: number | null
+          qualification_method?: string | null
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
+          source_medium?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           tax_regime?: string | null
           updated_at?: string

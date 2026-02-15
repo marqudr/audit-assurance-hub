@@ -1,8 +1,9 @@
-import { DollarSign, CheckSquare, GripVertical } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { DollarSign, CheckSquare, GripVertical, Clock, Ghost, Target, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Lead } from "@/hooks/useLeads";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
 import { getPhaseCompletionCount } from "@/hooks/useLeadChecklist";
+import { differenceInDays } from "date-fns";
 
 interface KanbanCardProps {
   lead: Lead;
@@ -31,10 +32,29 @@ function probColor(prob: number | null) {
   return "bg-green-500";
 }
 
+function icpBadge(score: number | null) {
+  if (score == null) return null;
+  if (score <= 3) return { label: `ICP ${score}`, className: "bg-red-100 text-red-700 border-red-200" };
+  if (score <= 6) return { label: `ICP ${score}`, className: "bg-yellow-100 text-yellow-700 border-yellow-200" };
+  return { label: `ICP ${score}`, className: "bg-green-100 text-green-700 border-green-200" };
+}
+
+function timeInStage(updatedAt: string) {
+  const days = differenceInDays(new Date(), new Date(updatedAt));
+  let color = "text-green-600";
+  if (days > 14) color = "text-red-600";
+  else if (days > 7) color = "text-yellow-600";
+  return { days, color };
+}
+
 export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
   const { completed, total } = getPhaseCompletionCount(checklist, lead.status);
   const dealValue = formatValue(lead.deal_value);
   const cnpj = formatCnpj(lead.cnpj);
+  const icp = icpBadge(lead.icp_score);
+  const tis = timeInStage(lead.updated_at);
+  const bantScore = [lead.has_budget, lead.has_authority, lead.has_need, lead.has_timeline].filter(Boolean).length;
+  const isZombie = !lead.next_action;
 
   return (
     <div
@@ -54,6 +74,32 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
           )}
         </div>
         <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+      </div>
+
+      {/* Badges row */}
+      <div className="flex flex-wrap gap-1">
+        {icp && (
+          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${icp.className}`}>
+            <Target className="h-2.5 w-2.5 mr-0.5" />
+            {icp.label}
+          </Badge>
+        )}
+        {bantScore > 0 && (
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
+            <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+            BANT {bantScore}/4
+          </Badge>
+        )}
+        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${tis.color}`}>
+          <Clock className="h-2.5 w-2.5 mr-0.5" />
+          {tis.days}d
+        </Badge>
+        {isZombie && (
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-orange-200">
+            <Ghost className="h-2.5 w-2.5 mr-0.5" />
+            Zumbi
+          </Badge>
+        )}
       </div>
 
       <div className="flex items-center gap-3 text-xs">
