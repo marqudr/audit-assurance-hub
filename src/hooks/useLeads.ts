@@ -24,6 +24,8 @@ export interface Lead {
   address_city: string | null;
   address_state: string | null;
   address_zip: string | null;
+  tax_regime: string | null;
+  fiscal_regime: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -88,6 +90,8 @@ export function useCreateLead() {
       address_city?: string;
       address_state?: string;
       address_zip?: string;
+      tax_regime?: string;
+      fiscal_regime?: string;
     }) => {
       const { data, error } = await supabase
         .from("leads")

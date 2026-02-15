@@ -174,11 +174,13 @@ export type Database = {
           engineering_headcount: number | null
           estimated_benefit_max: number | null
           estimated_benefit_min: number | null
+          fiscal_regime: string | null
           id: string
           rd_annual_budget: number | null
           revenue_range: string | null
           sector: string | null
           status: Database["public"]["Enums"]["lead_status"]
+          tax_regime: string | null
           updated_at: string
           user_id: string
         }
@@ -197,11 +199,13 @@ export type Database = {
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
+          fiscal_regime?: string | null
           id?: string
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
+          tax_regime?: string | null
           updated_at?: string
           user_id: string
         }
@@ -220,11 +224,13 @@ export type Database = {
           engineering_headcount?: number | null
           estimated_benefit_max?: number | null
           estimated_benefit_min?: number | null
+          fiscal_regime?: string | null
           id?: string
           rd_annual_budget?: number | null
           revenue_range?: string | null
           sector?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
+          tax_regime?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -88,6 +88,8 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               <div><span className="text-muted-foreground">CNAE</span><p className="font-medium">{lead.cnae || "—"}</p></div>
               <div><span className="text-muted-foreground">Setor</span><p className="font-medium">{lead.sector || "—"}</p></div>
               <div><span className="text-muted-foreground">Faixa de Receita</span><p className="font-medium">{lead.revenue_range || "—"}</p></div>
+              <div><span className="text-muted-foreground">Regime Tributário</span><p className="font-medium">{lead.tax_regime || "—"}</p></div>
+              <div><span className="text-muted-foreground">Regime Fiscal</span><p className="font-medium">{lead.fiscal_regime || "—"}</p></div>
             </div>
           </div>
 
