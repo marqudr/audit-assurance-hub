@@ -47,6 +47,12 @@ function timeInStage(updatedAt: string) {
   return { days, color };
 }
 
+function borderClass(nextActionDate: string | null) {
+  if (!nextActionDate) return "border-yellow-400 border-2";
+  if (new Date(nextActionDate) < new Date()) return "border-red-500 border-2";
+  return "border";
+}
+
 export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
   const { completed, total } = getPhaseCompletionCount(checklist, lead.status);
   const dealValue = formatValue(lead.deal_value);
@@ -64,7 +70,7 @@ export function KanbanCard({ lead, checklist, onClick }: KanbanCardProps) {
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={onClick}
-      className="bg-card border rounded-lg p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow space-y-2 select-none"
+      className={`bg-card rounded-lg p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow space-y-2 select-none ${borderClass(lead.next_action_date)}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
