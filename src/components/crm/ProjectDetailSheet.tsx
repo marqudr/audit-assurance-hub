@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone, Loader2, Building2, ClipboardList, FlaskConical } from "lucide-react";
+import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, TrendingUp, Megaphone, Loader2, Building2, ClipboardList, FlaskConical } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
 import { PhaseChecklist } from "./PhaseChecklist";
 import { ProjectAttachments } from "./ProjectAttachments";
@@ -61,11 +61,6 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         last_touch_channel: project.last_touch_channel || "",
         estimated_cac: project.estimated_cac ? formatBRL(String(Math.round(project.estimated_cac * 100))) : "",
         icp_score: project.icp_score ?? 0,
-        qualification_method: project.qualification_method || "",
-        has_budget: project.has_budget ?? false,
-        has_authority: project.has_authority ?? false,
-        has_need: project.has_need ?? false,
-        has_timeline: project.has_timeline ?? false,
         pain_points: project.pain_points || "",
         context: project.context || "",
         objection: project.objection || "",
@@ -95,7 +90,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
   const status = statusConfig[project.status] || statusConfig.prospeccao;
   const timeInStage = differenceInDays(new Date(), new Date(project.updated_at));
   const tisColor = timeInStage > 14 ? "text-red-600" : timeInStage > 7 ? "text-yellow-600" : "text-green-600";
-  const bantScore = [project.has_budget, project.has_authority, project.has_need, project.has_timeline].filter(Boolean).length;
+  
 
   const ed = (field: string, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
 
@@ -117,11 +112,6 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         last_touch_channel: editData.last_touch_channel || null,
         estimated_cac: editData.estimated_cac ? parseBRL(editData.estimated_cac) : null,
         icp_score: editData.icp_score,
-        qualification_method: editData.qualification_method || null,
-        has_budget: editData.has_budget,
-        has_authority: editData.has_authority,
-        has_need: editData.has_need,
-        has_timeline: editData.has_timeline,
         pain_points: editData.pain_points || null,
         context: editData.context || null,
         objection: editData.objection || null,
@@ -309,23 +299,6 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                           </span>
                         </div>
                       </div>
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Método</span>
-                      <span className="font-medium">{project.qualification_method || "—"}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">BANT</span>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                        <ShieldCheck className="h-3 w-3 mr-1" /> {bantScore}/4
-                      </Badge>
-                    </div>
-                    <div className="flex gap-4 text-xs">
-                      <span className={project.has_budget ? "text-green-600 font-medium" : "text-muted-foreground"}>💰 Budget</span>
-                      <span className={project.has_authority ? "text-green-600 font-medium" : "text-muted-foreground"}>👤 Authority</span>
-                      <span className={project.has_need ? "text-green-600 font-medium" : "text-muted-foreground"}>🎯 Need</span>
-                      <span className={project.has_timeline ? "text-green-600 font-medium" : "text-muted-foreground"}>⏰ Timeline</span>
                     </div>
                     <div><span className="text-muted-foreground">Dor</span><p className="font-medium text-sm mt-1">{project.pain_points || "—"}</p></div>
                     <div><span className="text-muted-foreground">Contexto</span><p className="font-medium text-sm mt-1">{project.context || "—"}</p></div>

@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Plus, Trash2, Loader2, MapPin, User, Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, ShieldCheck, TrendingUp, Megaphone } from "lucide-react";
+import { Plus, Trash2, Loader2, MapPin, User, Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, TrendingUp, Megaphone } from "lucide-react";
 import { TaxSimulator } from "./TaxSimulator";
 import { PhaseChecklist } from "./PhaseChecklist";
 import { formatPhone, formatBRL, parseBRL } from "./NewLeadModal";
@@ -95,11 +95,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         // Eligibility fields for ICP auto-calc
         has_lucro_fiscal: lead.has_lucro_fiscal ?? false,
         has_regularidade_fiscal: lead.has_regularidade_fiscal ?? false,
-        qualification_method: lead.qualification_method || "",
-        has_budget: lead.has_budget ?? false,
-        has_authority: lead.has_authority ?? false,
-        has_need: lead.has_need ?? false,
-        has_timeline: lead.has_timeline ?? false,
         pain_points: lead.pain_points || "",
         context: lead.context || "",
         objection: lead.objection || "",
@@ -124,7 +119,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const address = formatAddress(lead);
   const timeInStage = differenceInDays(new Date(), new Date(lead.updated_at));
   const tisColor = timeInStage > 14 ? "text-red-600" : timeInStage > 7 ? "text-yellow-600" : "text-green-600";
-  const bantScore = [lead.has_budget, lead.has_authority, lead.has_need, lead.has_timeline].filter(Boolean).length;
+  
 
   // Auto-calculated ICP Score based on eligibility
   const calcIcpScore = (data: Record<string, any>) => {
@@ -181,11 +176,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         icp_score: computedIcp,
         has_lucro_fiscal: editData.has_lucro_fiscal,
         has_regularidade_fiscal: editData.has_regularidade_fiscal,
-        qualification_method: editData.qualification_method || null,
-        has_budget: editData.has_budget,
-        has_authority: editData.has_authority,
-        has_need: editData.has_need,
-        has_timeline: editData.has_timeline,
         pain_points: editData.pain_points || null,
         context: editData.context || null,
         objection: editData.objection || null,
@@ -262,23 +252,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                   </span>
                 </div>
               </div>
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Método</span>
-              <span className="font-medium">{lead.qualification_method || "—"}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-muted-foreground">BANT</span>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                <ShieldCheck className="h-3 w-3 mr-1" /> {bantScore}/4
-              </Badge>
-            </div>
-            <div className="flex gap-4 text-xs">
-              <span className={lead.has_budget ? "text-green-600 font-medium" : "text-muted-foreground"}>💰 Budget</span>
-              <span className={lead.has_authority ? "text-green-600 font-medium" : "text-muted-foreground"}>👤 Authority</span>
-              <span className={lead.has_need ? "text-green-600 font-medium" : "text-muted-foreground"}>🎯 Need</span>
-              <span className={lead.has_timeline ? "text-green-600 font-medium" : "text-muted-foreground"}>⏰ Timeline</span>
             </div>
             <div><span className="text-muted-foreground">Dor</span><p className="font-medium text-sm mt-1">{lead.pain_points || "—"}</p></div>
             <div><span className="text-muted-foreground">Contexto</span><p className="font-medium text-sm mt-1">{lead.context || "—"}</p></div>
@@ -363,35 +336,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               <Badge variant="outline" className={calcIcpScore(editData) < 5 ? "bg-red-100 text-red-700 border-red-200" : calcIcpScore(editData) < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200"}>
                 Score: {calcIcpScore(editData)}/10
               </Badge>
-            </div>
-            <Separator />
-            <div className="space-y-1">
-              <Label className="text-xs">Método de Qualificação</Label>
-              <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>
-                <SelectTrigger><SelectValue placeholder="Selecione um método" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BANT">Orçamento, Decisor, Necessidade e Prazo</SelectItem>
-                  <SelectItem value="ANUM">Autoridade, Necessidade, Urgência e Dinheiro</SelectItem>
-                  <SelectItem value="MEDDIC">Métricas, Decisor e Critérios de Decisão</SelectItem>
-                  <SelectItem value="SPIN">Situação, Problema, Implicação e Solução</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">BANT</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { key: "has_budget", label: "Budget (Orçamento)" },
-                  { key: "has_authority", label: "Authority (Autoridade)" },
-                  { key: "has_need", label: "Need (Necessidade)" },
-                  { key: "has_timeline", label: "Timeline (Urgência)" },
-                ].map(({ key, label }) => (
-                  <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={editData[key]} onCheckedChange={(v) => ed(key, !!v)} />
-                    {label}
-                  </label>
-                ))}
-              </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Dor</Label>

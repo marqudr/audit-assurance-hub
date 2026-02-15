@@ -37,11 +37,6 @@ export interface Lead {
   icp_score: number | null;
   has_lucro_fiscal: boolean;
   has_regularidade_fiscal: boolean;
-  qualification_method: string | null;
-  has_budget: boolean;
-  has_authority: boolean;
-  has_need: boolean;
-  has_timeline: boolean;
   pain_points: string | null;
   context: string | null;
   objection: string | null;

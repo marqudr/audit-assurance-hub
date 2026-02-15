@@ -23,14 +23,9 @@ export interface Project {
   frascati_incerteza: boolean;
   frascati_sistematicidade: boolean;
   frascati_transferibilidade: boolean;
-  has_budget: boolean;
-  has_authority: boolean;
-  has_need: boolean;
-  has_timeline: boolean;
   pain_points: string | null;
   context: string | null;
   objection: string | null;
-  qualification_method: string | null;
   next_action: string | null;
   next_action_date: string | null;
   last_contacted_date: string | null;
