@@ -23,10 +23,11 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
   fechamento: { label: "Fechamento", className: "bg-green-100 text-green-800 border-green-200" },
+  ganho: { label: "Ganho", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+  perdido: { label: "Perdido", className: "bg-red-100 text-red-800 border-red-200" },
   // Legacy fallbacks
   novo: { label: "Novo", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificado: { label: "Qualificado", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  ganho: { label: "Ganho", className: "bg-green-100 text-green-800 border-green-200" },
 };
 
 function formatDate(dateStr: string) {
@@ -50,7 +51,7 @@ const CRM = () => {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const activeLeads = leads.filter((l) => l.status !== "fechamento" && l.status !== "ganho").length;
+  const activeLeads = leads.filter((l) => l.status !== "ganho" && l.status !== "perdido").length;
   const totalBudget = leads.reduce((sum, l) => sum + (l.deal_value || l.rd_annual_budget || 0), 0);
   const avgDeal = leads.length > 0 ? totalBudget / leads.length : 0;
 
