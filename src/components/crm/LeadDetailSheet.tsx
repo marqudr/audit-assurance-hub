@@ -313,12 +313,12 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
             <div className="space-y-1">
               <Label className="text-xs">Método de Qualificação</Label>
               <Select value={editData.qualification_method} onValueChange={(v) => ed("qualification_method", v)}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecione um método" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BANT">BANT</SelectItem>
-                  <SelectItem value="ANUM">ANUM</SelectItem>
-                  <SelectItem value="MEDDIC">MEDDIC</SelectItem>
-                  <SelectItem value="SPIN">SPIN</SelectItem>
+                  <SelectItem value="BANT">Orçamento, Decisor, Necessidade e Prazo (BANT)</SelectItem>
+                  <SelectItem value="ANUM">Autoridade, Necessidade, Urgência e Dinheiro (ANUM)</SelectItem>
+                  <SelectItem value="MEDDIC">Métricas, Decisor e Critérios (MEDDIC)</SelectItem>
+                  <SelectItem value="SPIN">Situação, Problema, Implicação e Solução (SPIN)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
