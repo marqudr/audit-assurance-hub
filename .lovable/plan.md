@@ -1,31 +1,57 @@
 
 
-# Reorganizar Seções do Detalhe do Lead
+# Fase Pos-Fechamento: Ganho e Perdido
 
 ## Objetivo
-Alterar a ordem das seções no drawer de detalhes do lead para um fluxo mais lógico.
+Apos a fase de Fechamento, o lead pode ter dois destinos:
+- **Ganho**: o deal foi convertido e deve iniciar o processo de operacoes.
+- **Perdido**: o deal nao foi convertido, mas a empresa permanece na base com todo o historico preservado.
 
-## Nova Ordem das Seções
+## Mudancas Necessarias
 
-```text
-1. Informacoes Principais (Empresa, CNPJ, Endereco) -- mantém
-2. Simulador de Potencial Fiscal -- sobe para logo abaixo do Endereco
-3. Contatos -- desce para abaixo do Simulador
-4. Secoes de Enriquecimento (Atribuicao, Qualificacao, Projecao de Receita)
-5. Phase Checklist
-6. Velocidade e Saude -- vai para o final
-```
+### 1. Banco de Dados
+- Adicionar o valor `perdido` ao enum `lead_status` (o valor `ganho` ja existe no enum).
+- Alterar o default do status de `'novo'` para `'prospeccao'` para alinhar com o pipeline atual.
+
+### 2. Tipos e Hooks (`src/hooks/useLeads.ts`)
+- Adicionar `"perdido"` ao tipo `LeadStatus`.
+
+### 3. Kanban Board (`src/components/crm/KanbanBoard.tsx`)
+- Adicionar duas colunas apos Fechamento:
+  - **Ganho** (cor verde, icone de sucesso)
+  - **Perdido** (cor vermelha/cinza)
+- Leads nessas colunas nao sao contados como "ativos" nas metricas.
+- A movimentacao para Ganho continua respeitando o checklist gate do Fechamento.
+
+### 4. Kanban Card (`src/components/crm/KanbanCard.tsx`)
+- Estilo visual diferenciado para leads ganhos (destaque verde) e perdidos (opacidade reduzida / cinza).
+
+### 5. Lead Detail Sheet (`src/components/crm/LeadDetailSheet.tsx`)
+- Adicionar configs de status para `perdido` no `statusConfig`.
+- Quando o lead estiver em "Ganho", exibir um link ou indicacao para iniciar o processo de Operacoes.
+- Quando o lead estiver em "Perdido", exibir um campo de "Motivo da Perda" (pode reutilizar o campo `objection`).
+
+### 6. Pagina CRM (`src/pages/CRM.tsx`)
+- Atualizar `statusConfig` para incluir `perdido`.
+- Ajustar a metrica de "Leads Ativos" para excluir leads com status `ganho` e `perdido`.
+
+### 7. Fluxo de Transicao
+- Do Fechamento, o usuario pode arrastar para **Ganho** ou **Perdido**.
+- De Perdido, o lead pode ser reativado (arrastado de volta para qualquer fase anterior).
+- De Ganho, o lead fica fixo (nao pode retroceder no pipeline).
 
 ## Detalhes Tecnicos
 
-**Arquivo:** `src/components/crm/LeadDetailSheet.tsx`
+**Migration SQL:**
+```sql
+ALTER TYPE public.lead_status ADD VALUE IF NOT EXISTS 'perdido';
+ALTER TABLE public.leads ALTER COLUMN status SET DEFAULT 'prospeccao';
+```
 
-Alteracoes no bloco de retorno (render), linhas ~537-584:
-
-- Mover o `<TaxSimulator>` para imediatamente apos o bloco de informacoes principais / endereco (antes dos Contatos)
-- Mover a secao de Contatos para apos o TaxSimulator
-- Separar "Velocidade e Saude" das secoes de Accordion (`readOnlySections` e `editSections`) e renderiza-la como ultimo item da pagina
-- Manter o `PhaseChecklist` antes de Velocidade e Saude
-
-Isso requer tambem reorganizar os Accordions em `readOnlySections` e `editSections`, removendo o AccordionItem de "velocity" de dentro deles e renderizando-o separadamente no final do drawer.
+**Arquivos modificados:**
+- `src/hooks/useLeads.ts` - tipo LeadStatus
+- `src/components/crm/KanbanBoard.tsx` - novas colunas + logica de gate
+- `src/components/crm/KanbanCard.tsx` - estilos para ganho/perdido
+- `src/components/crm/LeadDetailSheet.tsx` - statusConfig + UX pos-fechamento
+- `src/pages/CRM.tsx` - statusConfig + metricas ajustadas
 
