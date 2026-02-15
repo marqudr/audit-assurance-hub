@@ -1,116 +1,90 @@
 
 
-# InnovaSys — Tax Assurance Platform
+# Modulo CRM — Sales & Origination (pt-BR)
 
-## Overview
-Build the complete UI shell and navigation for InnovaSys with all major pages populated with realistic mock data. The design follows the "Modern Corporate (Velzon-Inspired)" direction: dark sidebar, pale gray background, white cards, and vibrant status colors (Teal, Amber, Burnt Orange). Lovable Cloud will be set up for basic auth.
+## Resumo
 
----
-
-## Phase 1: Foundation & Design System
-
-### Custom Theme & Tokens
-- Override Shadcn defaults with the Velzon-inspired palette: Deep Charcoal sidebar (#212529), Corporate Blue primary (#405189), Teal success (#0AB39C), Amber warning (#F7B84B), Burnt Orange danger (#F06548)
-- Inter font for UI, JetBrains Mono for data/hashes
-- Compact spacing suited for information-dense views
-
-### App Shell & Navigation
-- **Dark collapsible sidebar** with icon-only mini mode, containing navigation for: Dashboard, CRM, Operations, Agent Studio, Settings
-- **Top header bar** with breadcrumbs, global search trigger (Cmd+K command palette), notifications bell, and user avatar menu
-- Active route highlighting with NavLink
+Substituir a pagina CRM atual (Kanban com dados mock) por um modulo completo com persistencia no banco, enriquecimento de CNPJ via API externa e simulador de potencial fiscal. Toda a interface, labels, placeholders, mensagens e status serao em portugues do Brasil.
 
 ---
 
-## Phase 2: Executive Dashboard (Helena's View)
+## Etapa 1 — Dashboard e Tabela de Leads
 
-### Key Widgets (all with mock data)
-- **Status Overview Cards**: Active Projects, Pending Reviews, Completed This Month, Total Revenue — each with trend arrows and sparkline charts
-- **Risk Heatmap**: Visual grid showing project risk levels using the Teal/Amber/Orange semantic colors
-- **Project Pipeline Chart**: Bar or funnel chart showing projects across the 7 operational phases
-- **Recent Activity Feed**: Timeline of latest approvals, publications, and flagged items
-- **Client Health Score**: Summary cards per client with green/yellow/red indicators
+**Banco de dados (migration):**
+- Criar enum `lead_status` com valores: `novo`, `qualificado`, `proposta`, `ganho`
+- Criar tabela `leads` com colunas: `id`, `user_id`, `company_name`, `cnpj`, `cnae`, `sector`, `revenue_range`, `status` (default `novo`), `engineering_headcount`, `rd_annual_budget`, `estimated_benefit_min`, `estimated_benefit_max`, `created_at`, `updated_at`
+- RLS: usuario ve apenas seus leads; admins veem todos
+- Inserir 7 leads mock via codigo como dados iniciais
 
----
+**UI (pagina CRM.tsx reescrita):**
+- 3 cards de metricas:
+  - "Leads Ativos": 12 (Tendencia +5%)
+  - "Receita Potencial": R$ 45,2M
+  - "Ticket Medio": R$ 3,8M
+- Tabela de alta densidade com colunas:
+  - "Empresa", "CNPJ", "CNAE", "Status", "Ultima Atualizacao"
+- Status com badges coloridos:
+  - Novo (azul), Qualificado (amarelo), Proposta (roxo), Ganho (verde)
+- Hover na linha exibe botao ghost "Ver Detalhes"
 
-## Phase 3: CRM / Sales Pipeline
-
-### Pipeline Board
-- Kanban-style board with stages: Prospect → Qualified → Proposal → Negotiation → Won → Handover
-- Draggable lead cards showing company name, deal value, and complexity badge
-- Progressive disclosure: clicking a card reveals technical complexity fields and fiscal potential scores
-
-### Lead Detail View
-- Company info, contacts, interaction timeline
-- "Materializar Projeto" animated handover button (Won → Operations transition)
-
----
-
-## Phase 4: Operations Workspace (7-Phase Pipeline)
-
-### Phase Timeline Navigation
-- Persistent horizontal timeline bar showing all 7 phases with status indicators (not started, in progress, review, complete)
-- Clicking a phase switches the workspace context below
-
-### Split-View Editor (Phase 5 — Narrative)
-- Left panel: PDF/document viewer placeholder (scrollable content area)
-- Right panel: Rich text editor area with inline risk highlights
-- Resizable panels using react-resizable-panels with ratio persistence
-- **RiskBadge** components: colored status indicators (Safe/Warning/Risk) with mock confidence scores
-- **EvidenceAnchor** links: styled inline references that show hover previews
-
-### Phase-Specific Workspaces
-- Phase 2 (Tech Dive): Interview-style chat interface with suggested questions
-- Phase 6 (QA/Audit): Checklist console with pass/fail items and the "Green Check" celebration moment
-- Phase 7 (Publish): Confirmation modal with "weight" — hash generation display, lock animation
-
-### Contextual Agent Sidebar
-- Right sidebar panel showing the current phase's AI agent with its persona, status messages ("Reading PDF X...", "Cross-referencing Law Y..."), and suggestion cards
-- AI suggestions styled as ghost/secondary buttons; human actions as solid primary buttons
+**Hook (useLeads.ts):**
+- react-query para listar, criar e atualizar leads
 
 ---
 
-## Phase 5: Agent Studio (Sofia's View)
+## Etapa 2 — Modal de Novo Lead com Enriquecimento
 
-### Agent Cards Grid
-- Visual cards for each configured agent (Writer, Auditor, Researcher, etc.)
-- Each card shows: avatar, name, role, knowledge base document count, last trained date
-
-### Agent Configuration Panel
-- **Persona section**: Avatar upload area, name, role dropdown
-- **Instructions**: Structured fields — "What to do", "What to avoid", "Tone of voice"
-- **Knowledge Base (RAG)**: Drag-and-drop zone for PDFs with indexing status animation ("Reading...", "Indexed ✓")
-- Visual indicator showing which documents feed which agent
-
----
-
-## Phase 6: Lovable Cloud Setup
-
-### Authentication
-- Basic email/password login and signup pages
-- Protected routes for all main views
-- User profile basics (name, role)
-
-### Database Schema (minimal)
-- Users/profiles table
-- Projects table (mock structure for dashboard data)
-- Agents configuration table (for Agent Studio persistence)
+- Botao primario "+ Novo Lead" acima da tabela
+- Modal com titulo "Cadastrar Novo Lead"
+  - Campo "CNPJ" com mascara `00.000.000/0001-00`
+  - Ao preencher, exibir spinner "Enriquecendo dados da Receita Federal..."
+  - Chamada GET a `https://minhareceita.org/{cnpj_digits}`
+  - Auto-preenchimento: "Razao Social", "CNAE", "Setor"
+- Botao "Criar Lead" salva no banco com status `novo`
+- Todos os labels, placeholders e mensagens de erro em pt-BR
 
 ---
 
-## Cross-Cutting Features
+## Etapa 3 — Drawer de Detalhes e Simulador Fiscal
 
-### Command Palette (Cmd+K)
-- Global search and navigation: jump to any project, phase, agent, or page
-- Quick actions: create project, switch theme
+- Clicar numa linha abre Sheet lateral com titulo "Detalhes do Lead"
+- Informacoes exibidas: Empresa, CNPJ, CNAE, Setor, Faixa de Receita, Status
+- Secao "Simulador de Potencial Fiscal":
+  - Campos: "Qtd. de Engenheiros" (numero), "Orcamento Anual de P&D" (moeda)
+  - Botao "Rodar Simulacao IA" (ghost azul, icone Sparkles)
+- Resultado em Card:
+  - Titulo: "Beneficio Fiscal Estimado"
+  - Valor em verde/bold (ex: "R$ 1,2M - R$ 1,5M")
+  - Observacao: "Baseado na Lei 11.196 (Lei do Bem)"
+  - Calculo: `min = orcamento * 0.205`, `max = orcamento * 0.34`
+- Botao "Gerar Proposta" exibe toast "Proposta gerada com sucesso!" e muda status para `proposta`
 
-### Interaction Patterns
-- Optimistic UI on approve/resolve actions
-- Toast notifications for background saves
-- Inline error states (red borders, contextual messages)
-- Autosave indicator in header: "Saving..." → "Saved ✓" → "Locked 🔒"
+---
 
-### Responsive Behavior
-- Desktop-first with full Split-View
-- Tablet: collapsed sidebar, maintained split-view
-- Mobile: read-only companion mode with stacked cards and status dashboard only
+## Detalhes Tecnicos
+
+```text
+src/
+  components/
+    crm/
+      NewLeadModal.tsx       -- modal com formulario e enriquecimento
+      LeadDetailSheet.tsx    -- drawer lateral com detalhes
+      TaxSimulator.tsx       -- simulador fiscal
+  hooks/
+    useLeads.ts              -- react-query: listar, criar, atualizar
+  pages/
+    CRM.tsx                  -- reescrita: metricas + tabela
+```
+
+**Idioma:** Todos os textos da interface (titulos de pagina, headers de tabela, labels de formulario, placeholders, tooltips, toasts, botoes, badges de status, mensagens de erro e disclaimers) serao em portugues do Brasil.
+
+**Mascara de CNPJ:** Logica inline no onChange formatando para `00.000.000/0001-00`.
+
+**Enriquecimento:** Fetch direto do client para `https://minhareceita.org/{cnpj}`. Mapeamento: `razao_social` para nome da empresa, `cnae_fiscal` para CNAE, `cnae_fiscal_descricao` para setor.
+
+**Simulador:** Calculo local baseado em percentuais simplificados da Lei do Bem. Valores persistidos na tabela `leads`.
+
+**RLS:** Politicas restritivas — cada usuario ve/edita apenas seus leads. Admins podem visualizar todos.
+
+**Atualizacao do CommandPalette:** O item "CRM" sera renomeado para refletir o novo modulo.
 
