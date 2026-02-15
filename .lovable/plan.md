@@ -1,158 +1,113 @@
 
 
-# Pipeline Kanban do CRM
+# Enriquecimento do Pipeline CRM -- Atribuicao, Qualificacao, Velocidade e Projecao
 
 ## Resumo
-Adicionar uma visualizacao Kanban ao CRM com 5 colunas de pipeline, drag & drop entre fases, checklist obrigatorio por fase (gate de qualificacao) e indicadores visuais de valor e probabilidade. A pagina CRM tera abas para alternar entre a visao Tabela (atual) e a visao Kanban (nova).
+
+Adicionar 4 blocos de informacoes estrategicas ao pipeline de leads: Atribuicao e Origem, Qualificacao e Fit, Velocidade e Saude do Pipeline, e Projecao de Receita. Isso envolve novas colunas no banco, novos componentes de UI no LeadDetailSheet e indicadores visuais no KanbanCard.
 
 ---
 
 ## Etapa 1 -- Banco de Dados
 
-### 1.1 Expandir o enum `lead_status`
-O enum atual possui 4 valores (`novo`, `qualificado`, `proposta`, `ganho`). Sera expandido para 5 fases do pipeline:
+Adicionar as seguintes colunas na tabela `leads`:
 
-- `prospeccao` (substitui `novo`)
-- `qualificacao` (substitui `qualificado`)
-- `diagnostico` (novo)
-- `proposta` (mantido)
-- `fechamento` (substitui `ganho`)
+**Atribuicao e Origem:**
+- `source_medium` (text) -- Canal/meio detalhado (ex: "Google Ads / CPC Fundo de Funil")
+- `first_touch_channel` (text) -- Canal do primeiro toque
+- `last_touch_channel` (text) -- Canal que converteu
+- `estimated_cac` (numeric) -- Custo de aquisicao estimado
 
-Migration: adicionar os novos valores ao enum, migrar dados existentes e remover os antigos.
+**Qualificacao e Fit:**
+- `icp_score` (integer) -- Score de 0 a 10 de fit com ICP
+- `qualification_method` (text) -- BANT, ANUM, etc.
+- `has_budget` (boolean, default false) -- Tem orcamento
+- `has_authority` (boolean, default false) -- Tem autoridade
+- `has_need` (boolean, default false) -- Tem necessidade
+- `has_timeline` (boolean, default false) -- Tem urgencia
+- `pain_points` (text) -- Dores identificadas (texto livre)
 
-### 1.2 Nova tabela `lead_checklist_items`
-Armazena os itens de checklist completados por lead, por fase.
+**Velocidade e Saude:**
+- `next_action` (text) -- Proximo passo claro
+- `next_action_date` (timestamptz) -- Data do proximo passo
+- `content_consumed` (text) -- Materiais consumidos pelo prospect
 
-Colunas:
-- `id` (uuid, PK)
-- `lead_id` (uuid, FK para leads)
-- `phase` (lead_status -- a fase a que pertence)
-- `item_key` (text -- identificador do item, ex: "contato_decisor")
-- `completed` (boolean, default false)
-- `completed_at` (timestamptz, nullable)
-- `created_at` (timestamptz, default now())
+**Projecao de Receita:**
+- `estimated_ltv` (numeric) -- Valor estimado do cliente em 2-3 anos
+- `expected_close_date` (date) -- Data prevista de fechamento
 
-RLS: mesmas regras dos leads (usuario ve/edita apenas seus leads).
-
-### 1.3 Adicionar colunas na tabela `leads`
-- `probability` (integer, nullable, default null) -- probabilidade de fechamento (0-100%)
-- `deal_value` (numeric, nullable, default null) -- valor estimado do negocio
-
----
-
-## Etapa 2 -- Componentes do Kanban
-
-### 2.1 Abas na pagina CRM (`CRM.tsx`)
-Adicionar componente Tabs com duas abas abaixo das metricas:
-- "Tabela" -- exibe a tabela atual
-- "Pipeline" -- exibe o board Kanban
-
-### 2.2 Componente `KanbanBoard.tsx`
-Board com 5 colunas lado a lado, scroll horizontal em telas menores:
-
-```text
-+---------------+---------------+---------------+---------------+---------------+
-| Prospeccao    | Qualificacao  | Diagnostico   | Proposta      | Fechamento    |
-| (3 leads)     | (2 leads)     | (1 lead)      | (2 leads)     | (1 lead)      |
-|               |               |               |               |               |
-| [Card Lead]   | [Card Lead]   | [Card Lead]   | [Card Lead]   | [Card Lead]   |
-| [Card Lead]   | [Card Lead]   |               | [Card Lead]   |               |
-| [Card Lead]   |               |               |               |               |
-+---------------+---------------+---------------+---------------+---------------+
-```
-
-Cada coluna mostra:
-- Nome da fase com badge de contagem
-- Barra de cor no topo (azul, amarelo, laranja, roxo, verde)
-- Soma do valor dos deals na coluna
-
-### 2.3 Componente `KanbanCard.tsx`
-Card compacto mostrando:
-- Nome da empresa (titulo)
-- CNPJ formatado (subtitulo)
-- Indicador de valor (ex: "R$ 1,2M") com icone DollarSign
-- Barra de probabilidade (Progress bar colorida: vermelho < 30%, amarelo 30-60%, verde > 60%)
-- Indicador de checklist (ex: "3/5" com icone CheckSquare)
-- Clique abre o LeadDetailSheet
-
-### 2.4 Drag & Drop
-Implementacao usando HTML5 Drag & Drop nativo (sem dependencias extras):
-- `onDragStart` no card: define o lead ID no dataTransfer
-- `onDragOver` na coluna: permite drop com visual de destaque
-- `onDrop` na coluna: verifica o checklist gate antes de mover
-
-### 2.5 Gate de Qualificacao (Checklist)
-Ao tentar mover um card para a proxima fase, o sistema verifica se todos os itens obrigatorios da fase atual foram completados. Se nao, exibe um toast de erro informando os itens pendentes.
-
-Itens por fase (definidos no frontend como constante):
-
-**Prospeccao:**
-- Contato decisor identificado
-- CNPJ validado
-- Setor confirmado
-
-**Qualificacao:**
-- Regime tributario definido
-- Faixa de receita preenchida
-- Reuniao de qualificacao realizada
-
-**Diagnostico:**
-- Headcount de engenharia informado
-- Orcamento de P&D preenchido
-- Simulacao fiscal executada
-
-**Proposta:**
-- Proposta comercial enviada
-- Retorno do cliente registrado
-
-**Fechamento:**
-- Contrato assinado
-- Kickoff agendado
-
-### 2.6 Checklist na LeadDetailSheet
-Adicionar uma nova secao "Checklist da Fase" no drawer de detalhes, exibindo os itens da fase atual com checkboxes interativos. Ao marcar/desmarcar, persiste no banco.
+Nota: `probability`, `deal_value` e `time_in_stage` (calculado via `updated_at`) ja existem no schema.
 
 ---
 
-## Etapa 3 -- Hooks e Logica
+## Etapa 2 -- Atualizar Tipos e Hooks
 
-### 3.1 Atualizar `useLeads.ts`
-- Expandir o tipo `LeadStatus` com os novos valores
-- Atualizar o `statusConfig` em todos os componentes
+### 2.1 `useLeads.ts`
+- Adicionar os novos campos ao tipo `Lead`
+- Incluir os novos campos no `useCreateLead` e `useUpdateLead`
 
-### 3.2 Novo hook `useLeadChecklist.ts`
-- `useLeadChecklist(leadId)`: busca itens de checklist do lead
-- `useToggleChecklistItem()`: mutation para marcar/desmarcar item
-- `useCheckPhaseGate(leadId, phase)`: verifica se todos os itens obrigatorios da fase estao completos
+---
+
+## Etapa 3 -- UI no LeadDetailSheet
+
+Reorganizar o drawer de detalhes em secoes com Accordion ou abas internas:
+
+### 3.1 Secao "Atribuicao e Origem"
+- Campos: Source/Medium, Primeiro Toque, Ultimo Toque, CAC Estimado
+- Exibicao em grid 2 colunas, editavel no modo edicao
+
+### 3.2 Secao "Qualificacao e Fit"
+- ICP Score com slider visual (0-10) e cor semantica
+- BANT com 4 checkboxes (Budget, Authority, Need, Timeline) e badge resumo
+- Pain Points como textarea
+- Metodo de qualificacao como select (BANT, ANUM, MEDDIC, SPIN)
+
+### 3.3 Secao "Velocidade e Saude"
+- Time in Stage: calculado automaticamente a partir de `updated_at`, exibido em dias com cor (verde < 7d, amarelo 7-14d, vermelho > 14d)
+- Next Action: campo de texto + data
+- Alerta visual se nao houver proximo passo definido (badge "Zumbi")
+- Content Consumed: campo de texto
+
+### 3.4 Secao "Projecao de Receita"
+- LTV Estimado: campo monetario
+- Probabilidade: slider 0-100% (ja existe no schema)
+- Valor do Negocio: campo monetario (ja existe no schema)
+- Data de Fechamento Esperada: date picker
+
+---
+
+## Etapa 4 -- Indicadores no KanbanCard
+
+Enriquecer o card do Kanban com:
+
+- Badge de ICP Score (cor semantica: vermelho 0-3, amarelo 4-6, verde 7-10)
+- Indicador de "Time in Stage" em dias (com cor)
+- Badge "Zumbi" se nao houver next_action definido
+- Badge BANT mostrando quantos criterios atendidos (ex: "BANT 3/4")
 
 ---
 
 ## Detalhes Tecnicos
 
 ```text
-src/
-  components/
-    crm/
-      KanbanBoard.tsx        -- board com 5 colunas + drag & drop
-      KanbanCard.tsx          -- card compacto com indicadores
-      KanbanColumn.tsx        -- coluna individual do board
-      PhaseChecklist.tsx      -- checklist interativo no drawer
-  hooks/
-    useLeadChecklist.ts       -- CRUD de checklist items
-  pages/
-    CRM.tsx                   -- adiciona Tabs (Tabela | Pipeline)
+Arquivos modificados:
+  supabase/migrations/   -- nova migration com ALTER TABLE leads ADD COLUMN
+  src/hooks/useLeads.ts  -- tipos e mutations atualizados
+  src/components/crm/
+    LeadDetailSheet.tsx   -- 4 novas secoes com campos editaveis
+    KanbanCard.tsx        -- badges e indicadores adicionais
+    NewLeadModal.tsx      -- campos opcionais de origem e qualificacao
+
+Campos calculados (sem coluna no banco):
+  - time_in_stage: diferenca em dias entre now() e updated_at
+  - bant_score: contagem de has_budget + has_authority + has_need + has_timeline
 ```
 
-**Drag & Drop**: HTML5 nativo, sem bibliotecas externas. Visual feedback com borda tracejada azul na coluna alvo.
+**Formatacao monetaria**: Reutilizar `formatBRL` e `parseBRL` ja existentes no `NewLeadModal.tsx`.
 
-**Cores das colunas**:
-- Prospeccao: azul (blue-500)
-- Qualificacao: amarelo (yellow-500)
-- Diagnostico: laranja (orange-500)
-- Proposta: roxo (purple-500)
-- Fechamento: verde (green-500)
+**ICP Score**: Slider do Radix (ja instalado) com labels 0-10.
 
-**Probabilidade**: exibida como barra de progresso no card com cores semanticas.
+**Date picker**: Componente Calendar ja disponivel via `react-day-picker`.
 
-**Migration SQL**: usara `ALTER TYPE lead_status ADD VALUE` para adicionar novos valores, seguido de `UPDATE leads SET status = 'prospeccao' WHERE status = 'novo'` para migrar dados existentes. Os valores antigos nao serao removidos do enum (Postgres nao permite remover valores de enum facilmente), mas nao serao exibidos na UI.
+**Time in Stage**: Calculado no frontend com `date-fns` (ja instalado) usando `differenceInDays(new Date(), new Date(lead.updated_at))`.
 
