@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { useCreateLead, useCreateLeadContact } from "@/hooks/useLeads";
 import { toast } from "sonner";
@@ -158,7 +159,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cadastrar Novo Lead</DialogTitle>
         </DialogHeader>
@@ -190,12 +191,28 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="taxRegime">Regime Tributário</Label>
-              <Input id="taxRegime" placeholder="Ex: Lucro Real, Simples Nacional..." value={taxRegime} onChange={(e) => setTaxRegime(e.target.value)} />
+              <Label>Regime Tributário</Label>
+              <Select value={taxRegime} onValueChange={setTaxRegime}>
+                <SelectTrigger><SelectValue placeholder="Selecione o regime" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Simples Nacional">Simples Nacional</SelectItem>
+                  <SelectItem value="Lucro Presumido">Lucro Presumido</SelectItem>
+                  <SelectItem value="Lucro Real">Lucro Real</SelectItem>
+                  <SelectItem value="Lucro Arbitrado">Lucro Arbitrado</SelectItem>
+                  <SelectItem value="MEI">MEI</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="fiscalRegime">Regime Fiscal</Label>
-              <Input id="fiscalRegime" placeholder="Ex: Cumulativo, Não-cumulativo..." value={fiscalRegime} onChange={(e) => setFiscalRegime(e.target.value)} />
+              <Label>Regime Fiscal</Label>
+              <Select value={fiscalRegime} onValueChange={setFiscalRegime}>
+                <SelectTrigger><SelectValue placeholder="Selecione o regime" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cumulativo">Cumulativo</SelectItem>
+                  <SelectItem value="Não Cumulativo">Não Cumulativo</SelectItem>
+                  <SelectItem value="Misto">Misto</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
