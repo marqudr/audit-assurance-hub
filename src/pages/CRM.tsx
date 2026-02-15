@@ -52,6 +52,7 @@ const CRM = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const activeLeads = leads.filter((l) => l.status !== "ganho" && l.status !== "perdido").length;
+  const totalDealValue = leads.reduce((sum, l) => sum + (l.deal_value || 0), 0);
   const totalBudget = leads.reduce((sum, l) => sum + (l.deal_value || l.rd_annual_budget || 0), 0);
   const avgDeal = leads.length > 0 ? totalBudget / leads.length : 0;
 
@@ -74,7 +75,7 @@ const CRM = () => {
       </div>
 
       {/* Métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
             <div className="rounded-full bg-primary/10 p-2">
@@ -87,6 +88,17 @@ const CRM = () => {
             <Badge variant="secondary" className="ml-auto text-xs">
               <TrendingUp className="h-3 w-3 mr-1" /> +5%
             </Badge>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="rounded-full bg-primary/10 p-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Valor dos Negócios</p>
+              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(totalDealValue)}</p>
+            </div>
           </CardContent>
         </Card>
         <Card>

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 interface TaxSimulatorProps {
   lead: Lead;
+  hideProposalButton?: boolean;
 }
 
 function formatCurrency(value: number): string {
@@ -22,7 +23,7 @@ function formatCurrency(value: number): string {
   return `R$ ${value.toFixed(2).replace(".", ",")}`;
 }
 
-export function TaxSimulator({ lead }: TaxSimulatorProps) {
+export function TaxSimulator({ lead, hideProposalButton = false }: TaxSimulatorProps) {
   const [headcount, setHeadcount] = useState(lead.engineering_headcount?.toString() || "");
   const [budget, setBudget] = useState(lead.rd_annual_budget ? formatBRL((lead.rd_annual_budget * 100).toString()) : "");
   const [simulating, setSimulating] = useState(false);
@@ -110,9 +111,11 @@ export function TaxSimulator({ lead }: TaxSimulatorProps) {
             <p className="text-xs text-muted-foreground">
               Baseado na Lei 11.196 (Lei do Bem)
             </p>
-            <Button variant="default" onClick={handleGenerateProposal} className="w-full mt-2">
-              Gerar Proposta
-            </Button>
+            {!hideProposalButton && (
+              <Button variant="default" onClick={handleGenerateProposal} className="w-full mt-2">
+                Gerar Proposta
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
