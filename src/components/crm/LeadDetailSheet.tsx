@@ -98,6 +98,8 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         has_need: lead.has_need ?? false,
         has_timeline: lead.has_timeline ?? false,
         pain_points: lead.pain_points || "",
+        context: lead.context || "",
+        objection: lead.objection || "",
         next_action: lead.next_action || "",
         next_action_date: lead.next_action_date ? new Date(lead.next_action_date) : undefined,
         content_consumed: lead.content_consumed || "",
@@ -160,6 +162,8 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         has_need: editData.has_need,
         has_timeline: editData.has_timeline,
         pain_points: editData.pain_points || null,
+        context: editData.context || null,
+        objection: editData.objection || null,
         // Velocity
         next_action: editData.next_action || null,
         next_action_date: editData.next_action_date ? editData.next_action_date.toISOString() : null,
@@ -228,7 +232,9 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               <span className={lead.has_need ? "text-green-600 font-medium" : "text-muted-foreground"}>🎯 Need</span>
               <span className={lead.has_timeline ? "text-green-600 font-medium" : "text-muted-foreground"}>⏰ Timeline</span>
             </div>
-            <div><span className="text-muted-foreground">Pain Points</span><p className="font-medium text-sm mt-1">{lead.pain_points || "—"}</p></div>
+            <div><span className="text-muted-foreground">Dor</span><p className="font-medium text-sm mt-1">{lead.pain_points || "—"}</p></div>
+            <div><span className="text-muted-foreground">Contexto</span><p className="font-medium text-sm mt-1">{lead.context || "—"}</p></div>
+            <div><span className="text-muted-foreground">Objeção</span><p className="font-medium text-sm mt-1">{lead.objection || "—"}</p></div>
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -339,8 +345,16 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Pain Points</Label>
+              <Label className="text-xs">Dor</Label>
               <Textarea value={editData.pain_points} onChange={(e) => ed("pain_points", e.target.value)} placeholder="Dores identificadas..." rows={3} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Contexto</Label>
+              <Textarea value={editData.context} onChange={(e) => ed("context", e.target.value)} placeholder="Contexto do lead..." rows={3} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Objeção</Label>
+              <Textarea value={editData.objection} onChange={(e) => ed("objection", e.target.value)} placeholder="Objeções identificadas..." rows={3} />
             </div>
           </div>
         </AccordionContent>
