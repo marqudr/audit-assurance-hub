@@ -87,12 +87,10 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         address_city: lead.address_city || "",
         address_state: lead.address_state || "",
         address_zip: lead.address_zip || "",
-        // Attribution
         source_medium: lead.source_medium || "",
         first_touch_channel: lead.first_touch_channel || "",
         last_touch_channel: lead.last_touch_channel || "",
         estimated_cac: lead.estimated_cac ? formatBRL(String(Math.round(lead.estimated_cac * 100))) : "",
-        // Qualification
         icp_score: lead.icp_score ?? 5,
         qualification_method: lead.qualification_method || "",
         has_budget: lead.has_budget ?? false,
@@ -100,18 +98,18 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
         has_need: lead.has_need ?? false,
         has_timeline: lead.has_timeline ?? false,
         pain_points: lead.pain_points || "",
-        // Velocity
         next_action: lead.next_action || "",
         next_action_date: lead.next_action_date ? new Date(lead.next_action_date) : undefined,
         content_consumed: lead.content_consumed || "",
-        // Revenue
         estimated_ltv: lead.estimated_ltv ? formatBRL(String(Math.round(lead.estimated_ltv * 100))) : "",
         probability: lead.probability ?? 50,
         deal_value: lead.deal_value ? formatBRL(String(Math.round(lead.deal_value * 100))) : "",
         expected_close_date: lead.expected_close_date ? new Date(lead.expected_close_date) : undefined,
       });
     }
-  }, [lead, editing]);
+    // Only run when editing is toggled on, not when lead data changes mid-edit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
 
   if (!lead) return null;
 
@@ -182,8 +180,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const handleCancelEdit = () => setEditing(false);
   const ed = (field: string, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
 
-  // --- READ-ONLY SECTIONS ---
-  const ReadOnlySections = () => (
+  const readOnlySections = (
     <Accordion type="multiple" defaultValue={["attribution", "qualification", "velocity", "revenue"]} className="w-full">
       {/* Attribution */}
       <AccordionItem value="attribution">
@@ -285,8 +282,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
     </Accordion>
   );
 
-  // --- EDIT SECTIONS ---
-  const EditSections = () => (
+  const editSections = (
     <Accordion type="multiple" defaultValue={["attribution", "qualification", "velocity", "revenue"]} className="w-full">
       {/* Attribution Edit */}
       <AccordionItem value="attribution">
@@ -526,7 +522,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
 
           {/* Enrichment Sections */}
           <Separator />
-          {!editing ? <ReadOnlySections /> : <EditSections />}
+          {!editing ? readOnlySections : editSections}
 
           {/* Contatos */}
           <Separator />
