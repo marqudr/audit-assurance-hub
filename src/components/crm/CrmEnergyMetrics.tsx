@@ -95,7 +95,7 @@ export function CrmEnergyMetrics({ projects, onCardClick }: CrmEnergyMetricsProp
                         ICP {project.icp_score}
                       </Badge>
                       {project.deal_value ? (
-                        <span className="text-muted-foreground">{formatBRL(project.deal_value)}</span>
+                        <span className="text-muted-foreground font-mono">{formatBRL(project.deal_value)}</span>
                       ) : null}
                     </div>
                   </button>
@@ -129,7 +129,7 @@ export function CrmEnergyMetrics({ projects, onCardClick }: CrmEnergyMetricsProp
 
           <div className="flex flex-col items-center justify-center">
             <p className="text-xs text-muted-foreground mb-1">Idade Média da Oportunidade</p>
-            <p className="text-3xl font-bold">{avgAge}</p>
+            <p className="text-3xl font-bold font-mono">{avgAge}</p>
             <p className="text-xs text-muted-foreground">dias</p>
             {avgAge > 0 && (
               <div className="mt-2 space-y-0.5 text-xs w-full max-w-[200px]">
