@@ -9,6 +9,8 @@ import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import CRM from "./pages/CRM";
+import Companies from "./pages/Companies";
+import CompanyDetail from "./pages/CompanyDetail";
 import Operations from "./pages/Operations";
 import AgentStudio from "./pages/AgentStudio";
 import AgentForm from "./pages/AgentForm";
@@ -40,6 +42,8 @@ const App = () => (
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="/crm" element={<CRM />} />
+              <Route path="/empresas" element={<Companies />} />
+              <Route path="/empresas/:leadId" element={<CompanyDetail />} />
               <Route path="/operations" element={<Operations />} />
               <Route path="/operations/:projectId" element={<OperationsWorkspace />} />
               <Route path="/agent-space" element={<AgentSpace />} />
