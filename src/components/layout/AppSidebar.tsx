@@ -8,6 +8,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ShieldCheck,
+  ScrollText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -22,6 +24,8 @@ const baseNavItems = [
 
 const adminNavItems = [
   { title: "Agent Studio", url: "/agent-studio", icon: Bot },
+  { title: "Usuários", url: "/admin/users", icon: ShieldCheck },
+  { title: "Auditoria", url: "/admin/audit", icon: ScrollText },
 ];
 
 const bottomNavItems = [
