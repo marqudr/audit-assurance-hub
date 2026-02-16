@@ -1,4 +1,5 @@
-import { Search, Bell } from "lucide-react";
+import { useState } from "react";
+import { Bell } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useUserRoles } from "@/hooks/useUserRole";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { NotificationsSheet } from "./NotificationsSheet";
 
 const routeNames: Record<string, string> = {
   "/": "Dashboard",
@@ -21,10 +23,6 @@ const routeNames: Record<string, string> = {
   "/agent-studio": "Agent Studio",
   "/settings": "Settings",
 };
-
-interface AppHeaderProps {
-  onOpenCommandPalette: () => void;
-}
 
 function getInitials(name?: string | null): string {
   if (!name) return "?";
@@ -46,8 +44,9 @@ const roleLabels: Record<string, string> = {
   gestor: "Gestor",
 };
 
-export function AppHeader({ onOpenCommandPalette }: AppHeaderProps) {
+export function AppHeader() {
   const location = useLocation();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
   const currentPage = routeNames[location.pathname] || "InnovaSys";
   const { profile } = useProfile();
@@ -68,26 +67,11 @@ export function AppHeader({ onOpenCommandPalette }: AppHeaderProps) {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="hidden sm:flex items-center gap-2 text-muted-foreground"
-          onClick={onOpenCommandPalette}
-        >
-          <Search className="h-3.5 w-3.5" />
-          <span className="text-xs">Search...</span>
-          <kbd className="pointer-events-none ml-2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground sm:flex">
-            ⌘K
-          </kbd>
-        </Button>
-        <Button variant="ghost" size="icon" className="sm:hidden" onClick={onOpenCommandPalette}>
-          <Search className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="relative" onClick={() => setNotificationsOpen(true)}>
+          <Bell className="h-4 w-4" />
         </Button>
 
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-danger" />
-        </Button>
+        <NotificationsSheet open={notificationsOpen} onOpenChange={setNotificationsOpen} />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
