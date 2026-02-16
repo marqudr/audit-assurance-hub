@@ -1,106 +1,56 @@
 
 
-## Remover Pesquisa do Header + Notificacoes + Calendario por Hora na Agenda
+## Redesenhar Visual do "O que eu faco agora?"
 
-### Resumo
+Transformar o componente `CrmActionAlerts` de uma lista plana com texto pequeno em cards agrupadores visuais com contadores proeminentes, melhorando a legibilidade e o apelo visual.
 
-Tres mudancas principais: (1) remover o campo de pesquisa do header global, (2) tornar o icone de notificacao funcional com um painel de alertas e apontamentos, (3) redesenhar a secao "Agenda de Hoje" na sheet lateral do CRM com um calendario visual separado por hora e seletor de data.
+### Design Visual
+
+Cada categoria de alerta sera um card individual com:
+- Icone grande e colorido no topo
+- Contador numerico grande e destacado (text-2xl font-bold)
+- Titulo da categoria abaixo do numero
+- Lista de projetos clicaveis dentro de um Collapsible ou scroll area
+- Cor de fundo sutil por categoria para diferenciar visualmente
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  O que eu faco agora?                                       │
+├─────────────┬─────────────────┬─────────────────────────────┤
+│  [PhoneOff] │    [Clock]      │    [AlertTriangle]          │
+│     3       │      2          │        5                    │
+│ Sem Contato │   Atrasados     │     Parados                 │
+│             │                 │  7d+: 2  5d: 1  3d: 2       │
+│ > Projeto A │ > Projeto C     │ > Projeto E (8d)            │
+│ > Projeto B │ > Projeto D     │ > Projeto F (6d)            │
+│ > Projeto C │                 │ > Projeto G (4d)            │
+└─────────────┴─────────────────┴─────────────────────────────┘
+```
 
 ### Mudancas
 
-#### 1. Remover pesquisa do AppHeader
+#### `src/components/crm/CrmActionAlerts.tsx`
 
-- Remover os dois botoes de Search (desktop e mobile) do `AppHeader.tsx`
-- Remover a prop `onOpenCommandPalette` do componente
-- Atualizar `AppLayout.tsx` para nao passar mais a prop (manter o CommandPalette e atalho Cmd+K funcionando normalmente via teclado)
-- Remover import de `Search` do lucide-react
+Reescrever o componente `AlertCard` interno e o layout da grid:
 
-**Arquivos:** `src/components/layout/AppHeader.tsx`, `src/components/layout/AppLayout.tsx`
+1. **Cards agrupadores com cor semantica**:
+   - "Sem Contato": fundo `bg-red-50 dark:bg-red-950/30`, borda `border-red-200 dark:border-red-800`, icone vermelho
+   - "Atrasados": fundo `bg-amber-50 dark:bg-amber-950/30`, borda `border-amber-200 dark:border-amber-800`, icone ambar
+   - "Parados": fundo `bg-orange-50 dark:bg-orange-950/30`, borda `border-orange-200 dark:border-orange-800`, icone laranja
 
-#### 2. Tornar o icone de notificacao funcional
+2. **Contador proeminente**: Numero grande centralizado (`text-2xl font-bold`) com a cor semantica da categoria
 
-- Transformar o botao Bell no header em um trigger para um Sheet (painel lateral) de notificacoes
-- O Sheet mostrara:
-  - Alertas de projetos sem contato, atrasados e parados (reutilizando logica do `CrmActionAlerts`)
-  - Compromissos do dia (da tabela `appointments`)
-- O badge vermelho no icone Bell mostrara a contagem real de alertas + compromissos pendentes
-- Criar um novo componente `NotificationsSheet.tsx` no layout
+3. **Badges de sub-categoria para "Parados"**: Manter os badges 7d+, 5d, 3d com cores graduais dentro do card
 
-**Arquivos:** `src/components/layout/AppHeader.tsx`, novo `src/components/layout/NotificationsSheet.tsx`
+4. **Lista de projetos**: Itens clicaveis com hover mais visivel (`hover:bg-muted rounded px-2 py-1`) em vez de apenas `hover:underline`
 
-#### 3. Redesenhar "Agenda de Hoje" com calendario por hora
+5. **Estado vazio**: Quando uma categoria tem 0 itens, mostrar o card com opacidade reduzida e um check verde indicando que esta tudo ok
 
-Substituir a listagem simples de compromissos na `CrmRecentActivity` por um calendario visual por hora:
-
-- **Grade horaria**: Exibir slots de 07:00 ate 20:00 (horario comercial), cada slot com 1 hora de altura
-- **Compromissos posicionados**: Mostrar os compromissos no slot correspondente ao seu `appointment_time`
-- **Seletor de data**: Um icone de calendario (CalendarDays) ao lado do titulo "Agenda" que abre um Popover com o componente Calendar do shadcn para selecionar outro dia
-- **Adicionar compromisso com duplo-clique**: Ao fazer duplo-clique em um slot vazio, abrir um Dialog para criar um novo compromisso naquele horario pre-preenchido
-- **Hook de appointments por data**: Criar um novo hook `useAppointmentsByDate` que busca compromissos para uma data especifica (nao apenas hoje)
-
-**Arquivos:** `src/components/crm/CrmRecentActivity.tsx`, `src/hooks/useAppointments.ts`
-
-### Detalhes Tecnicos
-
-**`src/components/layout/AppHeader.tsx`:**
-- Remover import de `Search`
-- Remover prop `onOpenCommandPalette` da interface `AppHeaderProps`
-- Remover os dois Button de pesquisa (linhas 71-85)
-- Adicionar state `notificationsOpen` e Sheet para notificacoes no botao Bell
-- Importar dados de projetos e appointments para calcular contagem real do badge
-
-**`src/components/layout/AppLayout.tsx`:**
-- Remover a prop `onOpenCommandPalette` do `<AppHeader>`
-- Manter o `CommandPalette` e o listener de teclado Cmd+K intactos
-
-**`src/components/layout/NotificationsSheet.tsx`:**
-- Novo componente que recebe `open` e `onOpenChange`
-- Busca projetos ativos e appointments do dia
-- Exibe alertas (sem contato, atrasados, parados) e compromissos
-- Reutiliza logica de contagem do CRM
-
-**`src/hooks/useAppointments.ts`:**
-- Adicionar novo hook `useAppointmentsByDate(date: string)`:
-  - queryKey: `["appointments", date, userId]`
-  - Busca appointments filtrados por `appointment_date = date`
-  - Ordenados por `appointment_time` ascendente
-- Manter `useTodayAppointments` existente (usado em outros lugares)
-
-**`src/components/crm/CrmRecentActivity.tsx`:**
-- Adicionar state `selectedDate` (default: hoje)
-- Usar `useAppointmentsByDate(selectedDate)` em vez de `useTodayAppointments`
-- Substituir a lista simples por uma grade horaria (07:00-20:00)
-- Cada linha da grade: hora a esquerda, area de compromissos a direita
-- Compromissos renderizados no slot correto baseado em `appointment_time`
-- Duplo-clique em slot vazio: abrir Dialog com campos titulo e hora pre-preenchida
-- Icone CalendarDays abre Popover com Calendar para trocar a data selecionada
-- Ao trocar data, atualizar `selectedDate` e os compromissos refletem o novo dia
-- Manter a secao "Ultimas Interacoes" intacta no topo
-
-**Estrutura visual da grade horaria:**
-
-```text
-Agenda  [icon calendario]  16 Fev 2026
-┌──────┬──────────────────────────────┐
-│07:00 │                              │
-├──────┼──────────────────────────────┤
-│08:00 │ [Reuniao com cliente X]      │
-├──────┼──────────────────────────────┤
-│09:00 │                              │
-├──────┼──────────────────────────────┤
-│ ...  │  (duplo-clique para add)     │
-├──────┼──────────────────────────────┤
-│20:00 │                              │
-└──────┴──────────────────────────────┘
-```
+6. **Card container**: Manter o Card externo com titulo "O que eu faco agora?" mas remover o fundo vermelho/verde do container -- cada sub-card tera sua propria cor
 
 ### Resumo de Arquivos
 
 | Acao | Arquivo |
 |------|---------|
-| Modificar | `src/components/layout/AppHeader.tsx` |
-| Modificar | `src/components/layout/AppLayout.tsx` |
-| Novo | `src/components/layout/NotificationsSheet.tsx` |
-| Modificar | `src/hooks/useAppointments.ts` |
-| Modificar | `src/components/crm/CrmRecentActivity.tsx` |
+| Modificar | `src/components/crm/CrmActionAlerts.tsx` |
 
