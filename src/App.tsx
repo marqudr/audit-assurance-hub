@@ -12,6 +12,7 @@ import PortalLayout from "./pages/portal/PortalLayout";
 import PortalDashboard from "./pages/portal/PortalDashboard";
 import PortalProjects from "./pages/portal/PortalProjects";
 import PortalProjectDetail from "./pages/portal/PortalProjectDetail";
+import PortalSettings from "./pages/portal/PortalSettings";
 import Dashboard from "./pages/Dashboard";
 import CRM from "./pages/CRM";
 import Companies from "./pages/Companies";
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/portal" element={<PortalDashboard />} />
               <Route path="/portal/projetos" element={<PortalProjects />} />
               <Route path="/portal/projetos/:projectId" element={<PortalProjectDetail />} />
+              <Route path="/portal/configuracoes" element={<PortalSettings />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

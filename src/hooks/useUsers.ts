@@ -33,6 +33,7 @@ export function useUsers() {
       email: string;
       role: string;
       user_type: string;
+      display_name?: string;
       company_id?: string | null;
       manager_id?: string | null;
     }) => {

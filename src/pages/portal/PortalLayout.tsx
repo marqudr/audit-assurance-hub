@@ -14,22 +14,26 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useClientProfile } from "@/hooks/useClientPortal";
+import { useProfile } from "@/hooks/useProfile";
 import { NewProjectRequestModal } from "./NewProjectRequestModal";
 
 const portalNavItems = [
   { title: "Dashboard", url: "/portal", icon: LayoutDashboard },
   { title: "Meus Projetos", url: "/portal/projetos", icon: FolderOpen },
-  { title: "Configurações", url: "/settings", icon: Settings },
+  { title: "Configurações", url: "/portal/configuracoes", icon: Settings },
 ];
 
 export default function PortalLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
   const { signOut } = useAuth();
-  const { data: profile } = useClientProfile();
+  const { data: clientProfile } = useClientProfile();
+  const { profile } = useProfile();
   const navigate = useNavigate();
 
-  const companyName = (profile as any)?.leads?.company_name ?? "Minha Empresa";
+  const companyName = (clientProfile as any)?.leads?.company_name ?? "Minha Empresa";
+  const userName = profile?.display_name || "Usuário";
+  const userInitials = userName.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -93,6 +97,23 @@ export default function PortalLayout() {
 
         {/* Bottom */}
         <div className="border-t border-sidebar-border p-2 space-y-1">
+          {/* Profile badge */}
+          <button
+            onClick={() => navigate("/portal/configuracoes")}
+            className={cn(
+              "flex items-center gap-3 w-full rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium shrink-0">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+              ) : (
+                userInitials
+              )}
+            </div>
+            {!collapsed && <span className="truncate text-sidebar-foreground">{userName}</span>}
+          </button>
           <button
             onClick={() => signOut()}
             className={cn(

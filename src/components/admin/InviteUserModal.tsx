@@ -14,6 +14,7 @@ interface InviteUserModalProps {
 }
 
 export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
   const [userType, setUserType] = useState("staff");
@@ -28,10 +29,12 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         email,
         role,
         user_type: userType,
+        display_name: displayName || undefined,
         company_id: userType === "client" ? companyId || null : null,
       });
       toast({ title: "Convite enviado", description: `Convite enviado para ${email}` });
       onOpenChange(false);
+      setDisplayName("");
       setEmail("");
       setRole("user");
       setUserType("staff");
@@ -48,6 +51,10 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
           <DialogTitle>Convidar Usuário</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Nome completo" />
+          </div>
           <div className="space-y-2">
             <Label>Email</Label>
             <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@empresa.com" />
