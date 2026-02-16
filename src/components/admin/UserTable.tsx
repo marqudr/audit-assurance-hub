@@ -58,7 +58,7 @@ export function UserTable() {
                       <SelectItem value="gestor">Gestor</SelectItem>
                       <SelectItem value="closer">Closer</SelectItem>
                       <SelectItem value="consultor">Consultor</SelectItem>
-                      <SelectItem value="cfo">CFO</SelectItem>
+                      <SelectItem value="cfo">Admin Cliente</SelectItem>
                       <SelectItem value="user">Usuário</SelectItem>
                     </SelectContent>
                   </Select>
