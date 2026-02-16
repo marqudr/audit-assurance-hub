@@ -6,7 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
+import { ClientRoute } from "@/components/ClientRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import PortalLayout from "./pages/portal/PortalLayout";
+import PortalDashboard from "./pages/portal/PortalDashboard";
+import PortalProjects from "./pages/portal/PortalProjects";
+import PortalProjectDetail from "./pages/portal/PortalProjectDetail";
 import Dashboard from "./pages/Dashboard";
 import CRM from "./pages/CRM";
 import Companies from "./pages/Companies";
@@ -55,6 +60,18 @@ const App = () => (
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
               <Route path="/admin/audit" element={<AdminRoute><AdminAudit /></AdminRoute>} />
+            </Route>
+            {/* Portal do Cliente */}
+            <Route
+              element={
+                <ClientRoute>
+                  <PortalLayout />
+                </ClientRoute>
+              }
+            >
+              <Route path="/portal" element={<PortalDashboard />} />
+              <Route path="/portal/projetos" element={<PortalProjects />} />
+              <Route path="/portal/projetos/:projectId" element={<PortalProjectDetail />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,12 +1,11 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export function ClientRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
   const { profile, isLoading } = useProfile();
-  const location = useLocation();
 
   if (loading || isLoading) {
     return (
@@ -20,9 +19,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
-  // Redirect client users to portal
-  if (profile?.user_type === "client" && !location.pathname.startsWith("/portal")) {
-    return <Navigate to="/portal" replace />;
+  // Staff users should not access portal
+  if (profile?.user_type !== "client") {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

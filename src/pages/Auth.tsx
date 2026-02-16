@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,25 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { session, user } = useAuth();
+
+  // Redirect logged-in users based on type
+  useEffect(() => {
+    if (!session || !user) return;
+    const checkType = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("user_id", user.id)
+        .single();
+      if (data?.user_type === "client") {
+        navigate("/portal", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+    };
+    checkType();
+  }, [session, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +44,7 @@ export default function Auth() {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/");
+        // Redirect is handled by the useEffect above
       } else {
         const { error } = await supabase.auth.signUp({
           email,
