@@ -32,19 +32,46 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
+    // Check if caller is admin
     const { data: hasAdmin } = await adminClient.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
     });
-    if (!hasAdmin) throw new Error("Forbidden");
+
+    if (!hasAdmin) {
+      // Fallback: check if caller is CFO client and target is same company
+      const { data: callerProfile } = await adminClient
+        .from("profiles")
+        .select("user_type, company_id")
+        .eq("user_id", user.id)
+        .eq("is_deleted", false)
+        .single();
+
+      if (!callerProfile || callerProfile.user_type !== "client") throw new Error("Forbidden");
+
+      const { data: hasCfo } = await adminClient.rpc("has_role", {
+        _user_id: user.id,
+        _role: "cfo",
+      });
+      if (!hasCfo) throw new Error("Forbidden");
+
+      // Verify target belongs to same company
+      const { data: targetProfile } = await adminClient
+        .from("profiles")
+        .select("company_id")
+        .eq("user_id", user_id)
+        .single();
+
+      if (!targetProfile || targetProfile.company_id !== callerProfile.company_id) {
+        throw new Error("Forbidden");
+      }
+    }
 
     if (active) {
-      // Reactivate: unban auth user + set is_deleted = false
       await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "none" });
       await adminClient.from("profiles").update({ is_deleted: false, deleted_at: null }).eq("user_id", user_id);
     } else {
-      // Deactivate: ban auth user + soft delete profile
-      await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876600h" }); // ~100 years
+      await adminClient.auth.admin.updateUserById(user_id, { ban_duration: "876600h" });
       await adminClient.from("profiles").update({ is_deleted: true, deleted_at: new Date().toISOString() }).eq("user_id", user_id);
     }
 

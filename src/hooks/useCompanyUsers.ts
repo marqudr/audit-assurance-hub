@@ -14,17 +14,19 @@ export interface CompanyUser {
   role?: string;
 }
 
-export function useCompanyUsers(companyId: string | undefined) {
+export function useCompanyUsers(companyId: string | undefined, includeInactive = false) {
   return useQuery({
-    queryKey: ["company-users", companyId],
+    queryKey: ["company-users", companyId, includeInactive],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
+      let query = supabase
         .from("profiles")
         .select("*")
         .eq("company_id", companyId!)
-        .eq("user_type", "client")
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: true });
+        .eq("user_type", "client");
+      if (!includeInactive) {
+        query = query.eq("is_deleted", false);
+      }
+      const { data: profiles, error } = await query.order("created_at", { ascending: true });
       if (error) throw error;
 
       // Get roles for these users
