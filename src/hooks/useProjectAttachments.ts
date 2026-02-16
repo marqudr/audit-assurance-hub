@@ -29,11 +29,12 @@ export function useProjectAttachments(projectId: string | undefined) {
   });
 }
 
+const CRM_PHASES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento", "ganho", "perdido", "novo", "qualificado"];
+
 export function useCompanyAttachments(leadId: string | undefined) {
   return useQuery({
     queryKey: ["company-attachments", leadId],
     queryFn: async () => {
-      // Get all projects for this lead, then get their attachments
       const { data: projects, error: pErr } = await supabase
         .from("projects")
         .select("id, name")
@@ -49,12 +50,14 @@ export function useCompanyAttachments(leadId: string | undefined) {
         .order("created_at", { ascending: false });
       if (error) throw error;
 
-      // Enrich with project name
       const projectMap = Object.fromEntries(projects.map((p) => [p.id, p.name]));
-      return (data || []).map((a) => ({
-        ...a,
-        project_name: projectMap[a.project_id] || "—",
-      }));
+      // Filter only CRM-phase attachments
+      return (data || [])
+        .filter((a) => a.phase && CRM_PHASES.includes(a.phase))
+        .map((a) => ({
+          ...a,
+          project_name: projectMap[a.project_id] || "—",
+        }));
     },
     enabled: !!leadId,
   });
