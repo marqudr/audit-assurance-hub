@@ -3,11 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Palette, Download, Trash2, Shield } from "lucide-react";
+import { User, Bell, Palette, Download, Trash2, Shield, Calendar } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,23 +24,39 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const roleLabels: Record<string, string> = {
+  admin: "Admin",
+  closer: "Closer",
+  consultor: "Consultor",
+  cfo: "CFO",
+  user: "Usuário",
+  gestor: "Gestor",
+};
+
+const userTypeLabels: Record<string, string> = {
+  staff: "Staff Interno",
+  client: "Cliente",
+};
+
 const SettingsPage = () => {
   const { profile, isLoading, updateProfile } = useProfile();
   const { user, signOut } = useAuth();
+  const { data: roles } = useUserRoles();
   const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [nameInitialized, setNameInitialized] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Initialize display name from profile
   if (profile && !nameInitialized) {
     setDisplayName(profile.display_name || "");
+    setAvatarUrl(profile.avatar_url || "");
     setNameInitialized(true);
   }
 
   const handleSaveProfile = async () => {
     try {
-      await updateProfile.mutateAsync({ display_name: displayName });
+      await updateProfile.mutateAsync({ display_name: displayName, avatar_url: avatarUrl || null });
       toast({ title: "Perfil atualizado" });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -80,8 +100,8 @@ const SettingsPage = () => {
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
+        <p className="text-sm text-muted-foreground">Gerencie sua conta e preferências</p>
       </div>
 
       <Card>
@@ -92,6 +112,20 @@ const SettingsPage = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Role & Type badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            {roles?.map((role) => (
+              <Badge key={role} variant="default">
+                {roleLabels[role] || role}
+              </Badge>
+            ))}
+            {profile?.user_type && (
+              <Badge variant="outline">
+                {userTypeLabels[profile.user_type] || profile.user_type}
+              </Badge>
+            )}
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Nome</label>
@@ -102,6 +136,26 @@ const SettingsPage = () => {
               <div className="rounded-md border p-2.5 text-sm">{user?.email || "—"}</div>
             </div>
           </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">URL do Avatar</label>
+            <Input
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              placeholder="https://exemplo.com/avatar.png"
+            />
+          </div>
+
+          {profile?.created_at && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>
+                Conta criada em{" "}
+                {format(new Date(profile.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </span>
+            </div>
+          )}
+
           <Button size="sm" onClick={handleSaveProfile} disabled={updateProfile.isPending}>
             {updateProfile.isPending ? "Salvando..." : "Salvar Alterações"}
           </Button>
