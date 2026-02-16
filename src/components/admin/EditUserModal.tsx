@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { useUsers, AdminUser } from "@/hooks/useUsers";
 import { toast } from "@/hooks/use-toast";
 
@@ -18,10 +19,11 @@ interface EditUserModalProps {
 }
 
 export function EditUserModal({ user, onClose }: EditUserModalProps) {
-  const { updateUserProfile, updateUserRole } = useUsers();
+  const { updateUserProfile, updateUserRole, toggleUserActive } = useUsers();
   const [displayName, setDisplayName] = useState("");
   const [userType, setUserType] = useState("staff");
   const [role, setRole] = useState("user");
+  const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -29,6 +31,7 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
       setDisplayName(user.display_name || "");
       setUserType(user.user_type || "staff");
       setRole(user.user_roles?.[0]?.role || "user");
+      setIsActive(!user.is_deleted);
     }
   }, [user]);
 
@@ -48,6 +51,11 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
           oldRole: currentRole,
           newRole: role,
         });
+      }
+
+      const wasActive = !user.is_deleted;
+      if (isActive !== wasActive) {
+        await toggleUserActive.mutateAsync({ userId: user.user_id, active: isActive });
       }
 
       toast({ title: "Usuário atualizado" });
@@ -103,6 +111,15 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
                 <SelectItem value="user">Usuário</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <p className="text-sm font-medium">Usuário ativo</p>
+              <p className="text-xs text-muted-foreground">
+                {isActive ? "O usuário pode acessar o sistema" : "O acesso do usuário está bloqueado"}
+              </p>
+            </div>
+            <Switch checked={isActive} onCheckedChange={setIsActive} />
           </div>
         </div>
         <DialogFooter>
