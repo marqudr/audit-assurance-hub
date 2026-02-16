@@ -7,19 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { LogIn, UserPlus, Loader2 } from "lucide-react";
+import { LogIn, Loader2 } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { session, user } = useAuth();
 
-  // Redirect logged-in users based on type
   useEffect(() => {
     if (!session || !user) return;
     const checkType = async () => {
@@ -59,26 +56,9 @@ export default function Auth() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { display_name: displayName },
-          },
-        });
-        if (error) throw error;
-        toast({
-          title: "Conta criada!",
-          description: "Verifique seu e-mail para confirmar o cadastro.",
-        });
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (error: any) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
@@ -94,9 +74,7 @@ export default function Auth() {
           <CardDescription>
             {isForgotPassword
               ? "Informe seu e-mail para recuperar a senha"
-              : isLogin
-                ? "Entre na sua conta"
-                : "Crie sua conta"}
+              : "Entre na sua conta"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,18 +98,6 @@ export default function Auth() {
             </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Nome</Label>
-                  <Input
-                    id="displayName"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Seu nome"
-                    required={!isLogin}
-                  />
-                </div>
-              )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input
@@ -155,45 +121,36 @@ export default function Auth() {
                   minLength={6}
                 />
               </div>
-              {isLogin && (
-                <div className="text-right">
-                  <button
-                    type="button"
-                    className="text-sm text-muted-foreground hover:text-primary hover:underline"
-                    onClick={() => setIsForgotPassword(true)}
-                  >
-                    Esqueci minha senha
-                  </button>
-                </div>
-              )}
+              <div className="text-right">
+                <button
+                  type="button"
+                  className="text-sm text-muted-foreground hover:text-primary hover:underline"
+                  onClick={() => setIsForgotPassword(true)}
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : isLogin ? (
-                  <LogIn className="mr-2 h-4 w-4" />
                 ) : (
-                  <UserPlus className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2 h-4 w-4" />
                 )}
-                {isLogin ? "Entrar" : "Criar conta"}
+                Entrar
               </Button>
             </form>
           )}
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              className="text-sm text-primary hover:underline"
-              onClick={() => {
-                setIsForgotPassword(false);
-                if (!isForgotPassword) setIsLogin(!isLogin);
-              }}
-            >
-              {isForgotPassword
-                ? "Voltar ao login"
-                : isLogin
-                  ? "Não tem conta? Cadastre-se"
-                  : "Já tem conta? Entre"}
-            </button>
-          </div>
+          {isForgotPassword && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                className="text-sm text-primary hover:underline"
+                onClick={() => setIsForgotPassword(false)}
+              >
+                Voltar ao login
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
