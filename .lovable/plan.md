@@ -1,78 +1,74 @@
 
 
-## Convite com Nome + Perfil no Portal + Gestao de Usuarios pelo Cliente Admin
+## Editar Usuarios da Empresa + Permissoes no Portal do Cliente
 
-### 1. Adicionar campo "Nome" ao convite de usuario
+### Resumo
 
-**Arquivos modificados:**
-- `src/components/admin/InviteUserModal.tsx` -- Adicionar campo "Nome" ao formulario
-- `src/components/company/CompanyUsers.tsx` -- Adicionar campo "Nome" ao dialog de convite de empresa
-- `src/hooks/useUsers.ts` -- Incluir `display_name` no payload do `inviteUser`
-- `supabase/functions/invite-user/index.ts` -- Receber `display_name` e salvar no profile apos criacao do usuario
+Adicionar funcionalidade de edicao de nome e toggle ativo/inativo nos usuarios da empresa (painel admin). No portal do cliente, restringir gestao de usuarios (convidar, ativar/desativar) apenas ao perfil Admin (CFO), enquanto usuarios comuns podem apenas editar seu proprio perfil.
 
-O edge function recebera o campo `display_name` e atualizara o profile do usuario convidado com esse nome.
+### Mudancas
 
-### 2. Badge de perfil no Portal do Cliente
+#### 1. CompanyUsers.tsx -- Adicionar edicao de nome e toggle ativo/inativo
 
-**Arquivo modificado:**
-- `src/pages/portal/PortalLayout.tsx` -- Adicionar badge de perfil no rodape da sidebar com avatar (iniciais) e nome do usuario. Ao clicar, navega para `/portal/configuracoes`.
+- Adicionar um dialog de edicao de usuario com campos: Nome e Status (Ativo/Inativo)
+- Ao clicar em um usuario na lista, abrir o dialog de edicao
+- Substituir o botao de desativar (icone UserX) por um botao de editar (icone Pencil)
+- No dialog, salvar nome via `supabase.from("profiles").update({ display_name })` e status via edge function `admin-toggle-user`
+- Incluir tambem usuarios inativos na listagem (remover filtro `is_deleted = false` do hook ou criar variante)
 
-O badge exibira:
-- Avatar circular com iniciais do nome (ou imagem se `avatar_url` existir)
-- Nome do usuario truncado
-- Clicavel, levando a configuracoes
+#### 2. useCompanyUsers.ts -- Incluir usuarios inativos
 
-### 3. Pagina de Configuracoes do Portal (`/portal/configuracoes`)
+- Adicionar parametro opcional `includeInactive` ao hook
+- Quando `includeInactive = true`, nao filtrar por `is_deleted = false`
+- CompanyUsers (admin) passa `includeInactive = true`; PortalSettings (client) mantem o filtro atual
 
-**Novo arquivo:**
-- `src/pages/portal/PortalSettings.tsx` -- Pagina de configuracoes dedicada ao portal do cliente
+#### 3. admin-toggle-user Edge Function -- Permitir CFO de client
 
-Conteudo:
-- **Secao Perfil**: campos editaveis de Nome e Avatar URL, com botao Salvar (reutiliza `useProfile`)
-- **Secao Gestao de Usuarios** (visivel apenas para role `cfo`): lista usuarios da empresa e permite convidar novos, reutilizando a logica de `CompanyUsers` mas adaptada ao contexto do portal
+- Alem de verificar role `admin`, tambem permitir que usuarios com role `cfo` e `user_type = 'client'` facam toggle em usuarios da mesma `company_id`
+- Validar que o usuario alvo pertence a mesma empresa do caller
 
-**Arquivos modificados:**
-- `src/App.tsx` -- Adicionar rota `/portal/configuracoes` dentro do bloco `ClientRoute`
-- `src/pages/portal/PortalLayout.tsx` -- Atualizar nav item "Configuracoes" para apontar para `/portal/configuracoes` em vez de `/settings`
+#### 4. PortalSettings.tsx -- Ajustes de permissao
 
-### 4. Permissao de convite pelo Cliente Admin (CFO)
-
-O edge function `invite-user` ja permite que gestores convidem usuarios client. Precisamos estender para que usuarios com role `cfo` que sao do tipo `client` tambem possam convidar usuarios para sua propria empresa.
-
-**Arquivo modificado:**
-- `supabase/functions/invite-user/index.ts` -- Adicionar verificacao: se o caller tem role `cfo` E `user_type = 'client'`, permitir convite de usuarios client vinculados ao `company_id` do caller (nao permite escolher outra empresa)
+- Secao "Meu Perfil" (nome e avatar): visivel para **todos** os usuarios (sem mudanca)
+- Secao "Usuarios da Empresa": visivel apenas para CFO (ja implementado)
+- Adicionar botao de editar em cada usuario da lista (apenas CFO), permitindo alterar nome e status ativo/inativo
+- Reutilizar o mesmo padrao de dialog de edicao do CompanyUsers
 
 ### Detalhes Tecnicos
 
-**Edge function `invite-user` -- mudancas:**
-```
-Recebe novo campo: display_name (string, opcional)
-Apos criar/encontrar usuario:
-  - Atualiza profiles.display_name com o valor recebido
+**`src/hooks/useCompanyUsers.ts`:**
+- Novo parametro `includeInactive?: boolean` (default `false`)
+- Quando `true`, remove `.eq("is_deleted", false)` da query
+- Adicionar `is_deleted` como campo retornado (ja existe no tipo)
 
-Nova permissao:
-  - Se caller tem role 'cfo' e user_type 'client':
-    - Pode convidar apenas user_type 'client'
-    - company_id e forcado para o company_id do caller (ignora valor enviado)
-    - Roles permitidas: 'cfo' ou 'user' apenas
-```
+**`src/components/company/CompanyUsers.tsx`:**
+- Novo state: `editUser` (usuario selecionado), `editName`, `editActive`
+- Dialog de edicao com Input para nome e Switch para ativo/inativo
+- Salvar nome: `supabase.from("profiles").update({ display_name: editName }).eq("user_id", editUser.user_id)`
+- Salvar status: `supabase.functions.invoke("admin-toggle-user", { body: { user_id, active } })`
+- Chamar ambos em sequencia e invalidar query
+- Usar `useCompanyUsers(companyId, true)` para incluir inativos
+- Exibir badge "Inativo" em vermelho para usuarios com `is_deleted = true`
 
-**`PortalSettings.tsx` -- estrutura:**
-- Card Perfil: Nome (Input), Avatar URL (Input), botao Salvar
-- Card Gestao de Usuarios (condicional `role === 'cfo'`):
-  - Lista de usuarios da empresa via `useCompanyUsers(profile.company_id)`
-  - Botao "Convidar Usuario" abre dialog com campos: Nome, Email, Perfil (Admin/Usuario)
-  - Convite chama `invite-user` passando `company_id` do profile do caller
+**`supabase/functions/admin-toggle-user/index.ts`:**
+- Apos verificar se caller e admin, adicionar fallback:
+  - Buscar profile do caller para checar `user_type` e `company_id`
+  - Se `user_type = 'client'`, verificar se tem role `cfo`
+  - Verificar se usuario alvo tem mesmo `company_id`
+  - Se todas condicoes forem atendidas, permitir a operacao
+
+**`src/pages/portal/PortalSettings.tsx`:**
+- Adicionar state e dialog de edicao de usuario (mesmo padrao do CompanyUsers)
+- Cada usuario na lista ganha botao de editar (icone Pencil) visivel apenas para CFO
+- Dialog com campos Nome e Status (Switch ativo/inativo)
+- Chamar `admin-toggle-user` para toggle e update direto no profiles para nome
+- Usar `useCompanyUsers(companyId)` sem inativos para a lista padrao, mas CFO usa com inativos
 
 **Resumo de arquivos:**
 
 | Acao | Arquivo |
 |------|---------|
-| Novo | `src/pages/portal/PortalSettings.tsx` |
-| Modificar | `src/components/admin/InviteUserModal.tsx` |
+| Modificar | `src/hooks/useCompanyUsers.ts` |
 | Modificar | `src/components/company/CompanyUsers.tsx` |
-| Modificar | `src/hooks/useUsers.ts` |
-| Modificar | `supabase/functions/invite-user/index.ts` |
-| Modificar | `src/pages/portal/PortalLayout.tsx` |
-| Modificar | `src/App.tsx` |
-
+| Modificar | `supabase/functions/admin-toggle-user/index.ts` |
+| Modificar | `src/pages/portal/PortalSettings.tsx` |
