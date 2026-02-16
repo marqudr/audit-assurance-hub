@@ -129,6 +129,42 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           agent_id: string
@@ -518,29 +554,52 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string | null
           id: string
+          is_deleted: boolean
+          manager_id: string | null
           updated_at: string
           user_id: string
+          user_type: string
         }
         Insert: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           id?: string
+          is_deleted?: boolean
+          manager_id?: string | null
           updated_at?: string
           user_id: string
+          user_type?: string
         }
         Update: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string | null
           id?: string
+          is_deleted?: boolean
+          manager_id?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_attachments: {
         Row: {
@@ -806,6 +865,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_managed_user_ids: { Args: { _manager_id: string }; Returns: string[] }
+      get_user_company_id: { Args: { _user_id: string }; Returns: string }
+      get_user_type: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

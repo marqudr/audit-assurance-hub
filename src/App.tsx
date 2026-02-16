@@ -15,6 +15,8 @@ import AgentForm from "./pages/AgentForm";
 import AgentSpace from "./pages/AgentSpace";
 import OperationsWorkspace from "./pages/OperationsWorkspace";
 import SettingsPage from "./pages/Settings";
+import AdminUsers from "./pages/AdminUsers";
+import AdminAudit from "./pages/AdminAudit";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/agent-studio/new" element={<AdminRoute><AgentForm /></AdminRoute>} />
               <Route path="/agent-studio/:id" element={<AdminRoute><AgentForm /></AdminRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+              <Route path="/admin/audit" element={<AdminRoute><AdminAudit /></AdminRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
