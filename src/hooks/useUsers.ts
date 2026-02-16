@@ -7,12 +7,25 @@ export function useUsers() {
   const query = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, user_roles(role)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      // Fetch profiles and roles separately (no FK relationship between them)
+      const [profilesRes, rolesRes] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("*"),
+      ]);
+      if (profilesRes.error) throw profilesRes.error;
+      if (rolesRes.error) throw rolesRes.error;
+
+      // Group roles by user_id
+      const rolesByUser: Record<string, string[]> = {};
+      for (const r of rolesRes.data || []) {
+        if (!rolesByUser[r.user_id]) rolesByUser[r.user_id] = [];
+        rolesByUser[r.user_id].push(r.role);
+      }
+
+      return (profilesRes.data || []).map((p) => ({
+        ...p,
+        user_roles: (rolesByUser[p.user_id] || []).map((role) => ({ role })),
+      }));
     },
   });
 
@@ -37,9 +50,7 @@ export function useUsers() {
 
   const updateUserRole = useMutation({
     mutationFn: async ({ userId, oldRole, newRole }: { userId: string; oldRole: string; newRole: string }) => {
-      // Delete old role
       await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", oldRole as any);
-      // Insert new role
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
       if (error) throw error;
     },
