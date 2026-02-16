@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Users, Plus, Shield, Upload, Loader2, UserX } from "lucide-react";
+import { Users, Plus, Shield, Upload, Loader2, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useCompanyUsers } from "@/hooks/useCompanyUsers";
+import { useCompanyUsers, type CompanyUser } from "@/hooks/useCompanyUsers";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface CompanyUsersProps {
@@ -34,12 +35,55 @@ const roleConfig: Record<string, { label: string; description: string; icon: Rea
 
 export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
   const queryClient = useQueryClient();
-  const { data: users = [], isLoading } = useCompanyUsers(companyId);
+  const { data: users = [], isLoading } = useCompanyUsers(companyId, true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("user");
   const [inviting, setInviting] = useState(false);
+
+  // Edit state
+  const [editUser, setEditUser] = useState<CompanyUser | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editActive, setEditActive] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const openEdit = (user: CompanyUser) => {
+    setEditUser(user);
+    setEditName(user.display_name || "");
+    setEditActive(!user.is_deleted);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser) return;
+    setSaving(true);
+    try {
+      // Update name
+      const { error: nameError } = await supabase
+        .from("profiles")
+        .update({ display_name: editName })
+        .eq("user_id", editUser.user_id);
+      if (nameError) throw nameError;
+
+      // Toggle status if changed
+      const wasActive = !editUser.is_deleted;
+      if (editActive !== wasActive) {
+        const { data, error } = await supabase.functions.invoke("admin-toggle-user", {
+          body: { user_id: editUser.user_id, active: editActive },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
+
+      toast.success("Usuário atualizado.");
+      setEditUser(null);
+      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleInvite = async () => {
     if (!email.trim()) {
@@ -72,19 +116,6 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
       toast.error(err.message || "Erro ao convidar usuário.");
     } finally {
       setInviting(false);
-    }
-  };
-
-  const handleDeactivate = async (userId: string) => {
-    try {
-      const { error } = await supabase.functions.invoke("admin-toggle-user", {
-        body: { userId, action: "deactivate" },
-      });
-      if (error) throw error;
-      toast.success("Usuário desativado.");
-      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
-    } catch {
-      toast.error("Erro ao desativar usuário.");
     }
   };
 
@@ -124,7 +155,14 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
                         {(user.display_name || "?")[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{user.display_name || "Sem nome"}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium truncate">{user.display_name || "Sem nome"}</p>
+                          {user.is_deleted && (
+                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] px-1.5 py-0">
+                              Inativo
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">ID: {user.user_id.slice(0, 8)}...</p>
                       </div>
                     </div>
@@ -137,10 +175,10 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 opacity-0 group-hover:opacity-100"
-                        onClick={() => handleDeactivate(user.user_id)}
-                        title="Desativar usuário"
+                        onClick={() => openEdit(user)}
+                        title="Editar usuário"
                       >
-                        <UserX className="h-3.5 w-3.5 text-destructive" />
+                        <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -178,27 +216,16 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Nome</Label>
-              <Input
-                placeholder="Nome completo"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
+              <Input placeholder="Nome completo" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input
-                type="email"
-                placeholder="usuario@empresa.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <Input type="email" placeholder="usuario@empresa.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Perfil de Acesso</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cfo">
                     <div className="flex items-center gap-2">
@@ -219,6 +246,32 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
             <Button onClick={handleInvite} disabled={inviting}>
               {inviting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
               Enviar Convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome do usuário" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Ativo</Label>
+              <Switch checked={editActive} onCheckedChange={setEditActive} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser(null)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>

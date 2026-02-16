@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { User, Save, Users, Plus, Shield, Upload, Loader2, UserX } from "lucide-react";
+import { User, Save, Users, Plus, Shield, Upload, Loader2, Pencil } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { useUserRoles } from "@/hooks/useUserRole";
-import { useCompanyUsers } from "@/hooks/useCompanyUsers";
+import { useCompanyUsers, type CompanyUser } from "@/hooks/useCompanyUsers";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -36,7 +37,6 @@ export default function PortalSettings() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [initialized, setInitialized] = useState(false);
 
-  // Initialize form values from profile
   if (profile && !initialized) {
     setDisplayName(profile.display_name || "");
     setAvatarUrl(profile.avatar_url || "");
@@ -46,7 +46,11 @@ export default function PortalSettings() {
   const isCfo = roles?.includes("cfo") ?? false;
   const companyId = profile?.company_id;
 
-  const { data: companyUsers = [], isLoading: usersLoading } = useCompanyUsers(isCfo ? companyId ?? undefined : undefined);
+  // CFO sees inactive users too
+  const { data: companyUsers = [], isLoading: usersLoading } = useCompanyUsers(
+    isCfo ? companyId ?? undefined : undefined,
+    isCfo
+  );
 
   // Invite state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -54,6 +58,47 @@ export default function PortalSettings() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [inviting, setInviting] = useState(false);
+
+  // Edit state
+  const [editUser, setEditUser] = useState<CompanyUser | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editActive, setEditActive] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const openEdit = (user: CompanyUser) => {
+    setEditUser(user);
+    setEditName(user.display_name || "");
+    setEditActive(!user.is_deleted);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editUser) return;
+    setSaving(true);
+    try {
+      const { error: nameError } = await supabase
+        .from("profiles")
+        .update({ display_name: editName })
+        .eq("user_id", editUser.user_id);
+      if (nameError) throw nameError;
+
+      const wasActive = !editUser.is_deleted;
+      if (editActive !== wasActive) {
+        const { data, error } = await supabase.functions.invoke("admin-toggle-user", {
+          body: { user_id: editUser.user_id, active: editActive },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
+
+      toast.success("Usuário atualizado.");
+      setEditUser(null);
+      queryClient.invalidateQueries({ queryKey: ["company-users", companyId] });
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     try {
@@ -110,7 +155,7 @@ export default function PortalSettings() {
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Configurações</h1>
 
-      {/* Profile Section */}
+      {/* Profile Section — all users */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -159,19 +204,37 @@ export default function PortalSettings() {
                 {companyUsers.map((user) => {
                   const rc = roleConfig[user.role || "user"] || roleConfig.user;
                   return (
-                    <div key={user.id} className="flex items-center justify-between rounded-md border px-4 py-3">
+                    <div key={user.id} className="flex items-center justify-between rounded-md border px-4 py-3 group">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium shrink-0">
                           {(user.display_name || "?")[0].toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{user.display_name || "Sem nome"}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">{user.display_name || "Sem nome"}</p>
+                            {user.is_deleted && (
+                              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] px-1.5 py-0">
+                                Inativo
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <Badge variant="outline" className={rc.className}>
-                        {rc.icon}
-                        <span className="ml-1">{rc.label}</span>
-                      </Badge>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="outline" className={rc.className}>
+                          {rc.icon}
+                          <span className="ml-1">{rc.label}</span>
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100"
+                          onClick={() => openEdit(user)}
+                          title="Editar usuário"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -220,6 +283,32 @@ export default function PortalSettings() {
             <Button onClick={handleInvite} disabled={inviting}>
               {inviting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
               Enviar Convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog — CFO only */}
+      <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nome do usuário" />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Ativo</Label>
+              <Switch checked={editActive} onCheckedChange={setEditActive} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditUser(null)}>Cancelar</Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+              Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
