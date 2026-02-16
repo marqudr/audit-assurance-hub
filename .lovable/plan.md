@@ -1,50 +1,60 @@
 
 
-## Implementar Perfil do Usuario e Corrigir Informacoes Dinamicas
+## Modulo Empresa -- Pagina Dedicada com Historico Completo
 
-O usuario `dnmarques@gmail.com` ja esta configurado como **admin** e **staff** no banco de dados. O foco principal sera implementar as informacoes reais do perfil em toda a interface, substituindo dados hardcoded.
-
----
-
-### 1. Corrigir tipo AppRole
-
-O tipo `AppRole` em `useUserRole.ts` nao inclui `gestor`. Adicionar para consistencia com o enum do banco.
+Criar uma pagina dedicada `/empresas/:leadId` que centraliza todas as informacoes de uma empresa, seus projetos vinculados com historico de interacoes e o data room de documentos.
 
 ---
 
-### 2. Header Dinamico com Dados Reais do Perfil
+### 1. Nova Rota e Pagina `/empresas/:leadId`
 
-Atualmente o `AppHeader` mostra dados hardcoded ("Ricardo Costa", "Consultor Senior", "RC"). Alterar para:
+Criar a pagina `CompanyDetail` que sera a visao completa da empresa, acessivel a partir do CRM (ao clicar no nome da empresa) e tambem via sidebar.
 
-- Usar o hook `useProfile` para buscar `display_name` e `avatar_url`
-- Usar o hook `useUserRoles` para mostrar o role atual
-- Gerar iniciais dinamicamente a partir do `display_name`
-- Conectar os links "Profile", "Settings" e "Sign out" a acoes reais (navegar para `/settings`, chamar `signOut`)
+**Estrutura da pagina em tabs:**
+
+- **Visao Geral** -- Dados cadastrais da empresa (nome, CNPJ, CNAE, setor, faturamento, regime tributario, endereco completo, elegibilidade ICP, contatos)
+- **Projetos** -- Lista de todos os projetos vinculados com status, valor, datas, Frascati score, possibilidade de abrir o detalhe completo de cada projeto
+- **Historico** -- Timeline consolidada de todas as interacoes (ultimo contato, tipo de atividade, proximos passos) de todos os projetos
+- **Data Room** -- Rollup de todos os documentos anexados em todos os projetos, organizados por projeto e fase
 
 ---
 
-### 3. Enriquecer a Pagina de Settings
+### 2. Adicionar Rota "Empresas" na Sidebar
 
-Adicionar ao card de Perfil:
+Adicionar item "Empresas" no menu de navegacao lateral com icone `Building2`, apontando para `/empresas`. Criar tambem uma pagina de listagem `/empresas` com tabela de todas as empresas.
 
-- Exibir o **email** do usuario (ja existe)
-- Exibir o **role** atual (badge, somente leitura)
-- Exibir o **tipo de usuario** (Staff/Cliente, somente leitura)
-- Campo editavel para **avatar_url**
-- Mostrar data de criacao da conta
+---
+
+### 3. Pagina de Listagem de Empresas `/empresas`
+
+Tabela com colunas: Nome da Empresa, CNPJ, Setor, Regime Tributario, ICP Score, Qtd Projetos, Valor Total. Clicar em uma linha navega para `/empresas/:leadId`.
 
 ---
 
 ### 4. Detalhes Tecnicos
 
-**Arquivos a modificar:**
+**Novos arquivos:**
+- `src/pages/Companies.tsx` -- Listagem de empresas
+- `src/pages/CompanyDetail.tsx` -- Pagina completa da empresa com tabs
+- `src/components/company/CompanyOverview.tsx` -- Tab Visao Geral (reutiliza logica do LeadDetailSheet)
+- `src/components/company/CompanyProjects.tsx` -- Tab Projetos (lista com cards expandiveis)
+- `src/components/company/CompanyTimeline.tsx` -- Tab Historico (timeline consolidada)
+- `src/components/company/CompanyDataRoom.tsx` -- Tab Data Room (rollup de anexos usando `useCompanyAttachments`)
 
-- `src/hooks/useUserRole.ts` -- adicionar `"gestor"` ao tipo `AppRole`
-- `src/components/layout/AppHeader.tsx` -- importar `useProfile`, `useUserRoles`, `useAuth`; substituir dados hardcoded por dados reais; conectar "Sign out" ao `signOut()`; navegar para `/settings` ao clicar em "Settings"/"Profile"
-- `src/pages/Settings.tsx` -- adicionar badges de role e user_type; campo de avatar_url; exibir data de criacao
+**Arquivos modificados:**
+- `src/App.tsx` -- Adicionar rotas `/empresas` e `/empresas/:leadId`
+- `src/components/layout/AppSidebar.tsx` -- Adicionar item "Empresas" com icone `Building2`
+- `src/pages/CRM.tsx` -- Alterar clique no nome da empresa para navegar para `/empresas/:leadId`
 
-**Hooks utilizados (ja existentes):**
-- `useProfile()` -- retorna `profile.display_name`, `profile.avatar_url`, `profile.user_type`, `profile.created_at`
-- `useUserRoles()` -- retorna array de roles do usuario
-- `useAuth()` -- retorna `user.email` e `signOut()`
+**Hooks reutilizados (ja existentes):**
+- `useLeads()` -- Lista todas as empresas
+- `useLeadContacts(leadId)` -- Contatos da empresa
+- `useProjects(leadId)` -- Projetos vinculados a empresa
+- `useCompanyAttachments(leadId)` -- Rollup de anexos de todos os projetos
+- `useUpdateLead()` -- Editar dados da empresa
+
+**Fluxo de navegacao:**
+- Sidebar: Empresas -> Lista de empresas -> Detalhe da empresa
+- CRM: Clicar no nome da empresa em um projeto -> Detalhe da empresa
+- Detalhe da empresa: Clicar em um projeto -> Abre ProjectDetailSheet
 
