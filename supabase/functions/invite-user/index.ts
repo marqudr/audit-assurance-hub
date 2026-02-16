@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is admin
+    // Verify caller is authenticated
     const authHeader = req.headers.get("Authorization")!;
     const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check if caller is admin or gestor
+    // Get caller roles and profile
     const { data: callerRoles } = await adminClient
       .from("user_roles")
       .select("role")
@@ -36,19 +36,38 @@ Deno.serve(async (req) => {
     const roles = callerRoles?.map((r: any) => r.role) || [];
     const isAdmin = roles.includes("admin");
     const isGestor = roles.includes("gestor");
+    const isCfo = roles.includes("cfo");
 
-    const { email, role, user_type, company_id, manager_id } = await req.json();
+    // Get caller profile for client CFO check
+    const { data: callerProfile } = await adminClient
+      .from("profiles")
+      .select("user_type, company_id")
+      .eq("user_id", caller.id)
+      .single();
+
+    const isClientCfo = isCfo && callerProfile?.user_type === "client";
+
+    const { email, role, user_type, company_id, manager_id, display_name } = await req.json();
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), { status: 400, headers: corsHeaders });
     }
 
-    // For client users, only admin or gestor can invite
+    // Permission checks
+    let finalCompanyId = company_id || null;
+
     if (user_type === "client") {
-      if (!isAdmin && !isGestor) {
+      if (isClientCfo) {
+        // Client CFO can only invite to their own company
+        finalCompanyId = callerProfile!.company_id;
+        // Restrict roles to cfo or user only
+        if (role && !["cfo", "user"].includes(role)) {
+          return new Response(JSON.stringify({ error: "Client admins can only assign 'cfo' or 'user' roles" }), { status: 403, headers: corsHeaders });
+        }
+      } else if (!isAdmin && !isGestor) {
         return new Response(JSON.stringify({ error: "Only admins or managers can invite client users" }), { status: 403, headers: corsHeaders });
       }
-      if (!company_id) {
+      if (!finalCompanyId) {
         return new Response(JSON.stringify({ error: "company_id is required for client users" }), { status: 400, headers: corsHeaders });
       }
     } else {
@@ -62,8 +81,9 @@ Deno.serve(async (req) => {
     let newUserId: string;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
+        display_name: display_name || email,
         user_type: user_type || "staff",
-        company_id: company_id || null,
+        company_id: finalCompanyId,
         manager_id: manager_id || null,
       },
     });
@@ -79,21 +99,26 @@ Deno.serve(async (req) => {
         newUserId = existing.id;
 
         // Update their profile
-        await adminClient.from("profiles").update({
+        const profileUpdates: any = {
           user_type: user_type || "staff",
-          company_id: company_id || null,
+          company_id: finalCompanyId,
           manager_id: manager_id || null,
-        }).eq("user_id", newUserId);
+        };
+        if (display_name) profileUpdates.display_name = display_name;
+        await adminClient.from("profiles").update(profileUpdates).eq("user_id", newUserId);
       } else {
         return new Response(JSON.stringify({ error: inviteError.message }), { status: 400, headers: corsHeaders });
       }
     } else {
       newUserId = inviteData.user.id;
+      // Update display_name on the profile if provided (handle_new_user trigger already created it)
+      if (display_name) {
+        await adminClient.from("profiles").update({ display_name }).eq("user_id", newUserId);
+      }
     }
 
     // Assign role (upsert — delete old then insert)
     if (role) {
-      // Remove existing roles, then insert the new one
       await adminClient.from("user_roles").delete().eq("user_id", newUserId);
       await adminClient.from("user_roles").insert({
         user_id: newUserId,

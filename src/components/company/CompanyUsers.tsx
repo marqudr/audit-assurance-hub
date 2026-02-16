@@ -36,6 +36,7 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
   const queryClient = useQueryClient();
   const { data: users = [], isLoading } = useCompanyUsers(companyId);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<string>("user");
   const [inviting, setInviting] = useState(false);
@@ -54,6 +55,7 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
           role,
           user_type: "client",
           company_id: companyId,
+          display_name: displayName.trim() || undefined,
         },
       });
 
@@ -61,6 +63,7 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
       if (data?.error) throw new Error(data.error);
 
       toast.success(`Convite enviado para ${email}`);
+      setDisplayName("");
       setEmail("");
       setRole("user");
       setInviteOpen(false);
@@ -173,6 +176,14 @@ export function CompanyUsers({ companyId, companyName }: CompanyUsersProps) {
             <DialogTitle>Convidar Usuário — {companyName}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input
+                placeholder="Nome completo"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label>Email</Label>
               <Input
