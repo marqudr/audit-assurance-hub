@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { maskCnpj } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Building2, FolderKanban, Clock, FileText, Users } from "lucide-react";
@@ -45,7 +46,7 @@ const CompanyDetail = () => {
             <Building2 className="h-5 w-5" /> {lead.company_name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {lead.cnpj || "CNPJ não informado"} · {lead.sector || "Setor não informado"}
+            {lead.cnpj ? maskCnpj(lead.cnpj) : "CNPJ não informado"} · {lead.sector || "Setor não informado"}
           </p>
         </div>
       </div>
