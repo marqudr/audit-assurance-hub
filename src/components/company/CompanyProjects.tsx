@@ -3,11 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, FlaskConical } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import type { Project } from "@/hooks/useProjects";
 
 interface CompanyProjectsProps {
   projects: Project[];
-  onProjectClick: (project: Project) => void;
+  leadId: string;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -20,7 +21,9 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   perdido: { label: "Perdido", className: "bg-red-100 text-red-800 border-red-200" },
 };
 
-export function CompanyProjects({ projects, onProjectClick }: CompanyProjectsProps) {
+export function CompanyProjects({ projects, leadId }: CompanyProjectsProps) {
+  const navigate = useNavigate();
+
   if (projects.length === 0) {
     return <p className="text-sm text-muted-foreground italic mt-4">Nenhum projeto vinculado.</p>;
   }
@@ -33,7 +36,7 @@ export function CompanyProjects({ projects, onProjectClick }: CompanyProjectsPro
         const frascatiBadge = frascatiScore < 3 ? "bg-red-100 text-red-700 border-red-200" : frascatiScore < 5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
 
         return (
-          <Card key={project.id} className="group cursor-pointer hover:border-primary/30 transition-colors" onClick={() => onProjectClick(project)}>
+          <Card key={project.id} className="group cursor-pointer hover:border-primary/30 transition-colors" onClick={() => navigate(`/empresas/${leadId}/projetos/${project.id}`)}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1.5 flex-1 min-w-0">

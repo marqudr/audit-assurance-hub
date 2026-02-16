@@ -16,6 +16,7 @@ import AgentStudio from "./pages/AgentStudio";
 import AgentForm from "./pages/AgentForm";
 import AgentSpace from "./pages/AgentSpace";
 import OperationsWorkspace from "./pages/OperationsWorkspace";
+import CompanyProjectDetail from "./pages/CompanyProjectDetail";
 import SettingsPage from "./pages/Settings";
 import AdminUsers from "./pages/AdminUsers";
 import AdminAudit from "./pages/AdminAudit";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/crm" element={<CRM />} />
               <Route path="/empresas" element={<Companies />} />
               <Route path="/empresas/:leadId" element={<CompanyDetail />} />
+              <Route path="/empresas/:leadId/projetos/:projectId" element={<CompanyProjectDetail />} />
               <Route path="/operations" element={<Operations />} />
               <Route path="/operations/:projectId" element={<OperationsWorkspace />} />
               <Route path="/agent-space" element={<AgentSpace />} />

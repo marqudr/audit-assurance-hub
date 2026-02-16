@@ -2,15 +2,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Building2, FolderKanban, Clock, FileText, Users } from "lucide-react";
-import { useLeads, type Lead } from "@/hooks/useLeads";
-import { useProjects, type Project } from "@/hooks/useProjects";
+import { useLeads } from "@/hooks/useLeads";
+import { useProjects } from "@/hooks/useProjects";
 import { CompanyOverview } from "@/components/company/CompanyOverview";
 import { CompanyProjects } from "@/components/company/CompanyProjects";
 import { CompanyTimeline } from "@/components/company/CompanyTimeline";
 import { CompanyDataRoom } from "@/components/company/CompanyDataRoom";
 import { CompanyUsers } from "@/components/company/CompanyUsers";
-import { ProjectDetailSheet } from "@/components/crm/ProjectDetailSheet";
-import { useState } from "react";
 
 const CompanyDetail = () => {
   const { leadId } = useParams<{ leadId: string }>();
@@ -20,14 +18,6 @@ const CompanyDetail = () => {
 
   const lead = leads.find((l) => l.id === leadId) || null;
   const companyProjects = allProjects.filter((p) => p.lead_id === leadId);
-
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projectSheetOpen, setProjectSheetOpen] = useState(false);
-
-  const handleProjectClick = (project: Project) => {
-    setSelectedProject(project);
-    setProjectSheetOpen(true);
-  };
 
   if (leadsLoading || projectsLoading) {
     return <div className="flex items-center justify-center h-64 text-muted-foreground">Carregando...</div>;
@@ -83,7 +73,7 @@ const CompanyDetail = () => {
           <CompanyOverview lead={lead} />
         </TabsContent>
         <TabsContent value="projects">
-          <CompanyProjects projects={companyProjects} onProjectClick={handleProjectClick} />
+          <CompanyProjects projects={companyProjects} leadId={lead.id} />
         </TabsContent>
         <TabsContent value="timeline">
           <CompanyTimeline projects={companyProjects} />
@@ -96,11 +86,6 @@ const CompanyDetail = () => {
         </TabsContent>
       </Tabs>
 
-      <ProjectDetailSheet
-        project={selectedProject}
-        open={projectSheetOpen}
-        onOpenChange={setProjectSheetOpen}
-      />
     </div>
   );
 };
