@@ -142,10 +142,10 @@ export function EditUserModal({ user, onClose }: EditUserModalProps) {
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground">Gestor</label>
-            <Select value={managerId} onValueChange={setManagerId}>
+            <Select value={managerId || "none"} onValueChange={(val) => setManagerId(val === "none" ? "" : val)}>
               <SelectTrigger><SelectValue placeholder="Sem gestor" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem gestor</SelectItem>
+                <SelectItem value="none">Sem gestor</SelectItem>
                 {gestores.map((g) => (
                   <SelectItem key={g.user_id} value={g.user_id}>
                     {g.display_name || g.email}
