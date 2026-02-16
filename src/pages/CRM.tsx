@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ function formatDate(dateStr: string) {
 const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
 
 const CRM = () => {
+  const navigate = useNavigate();
   const { data: leads = [], isLoading: leadsLoading } = useLeads();
   const { data: projects = [], isLoading: projectsLoading } = useProjects();
   const isLoading = leadsLoading || projectsLoading;
@@ -236,7 +238,13 @@ const CRM = () => {
                           onClick={() => handleProjectClick(project)}
                         >
                           <TableCell className="font-medium">{project.name}</TableCell>
-                          <TableCell className="text-muted-foreground text-xs">
+                          <TableCell
+                            className="text-muted-foreground text-xs hover:text-foreground hover:underline cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (project.lead_id) navigate(`/empresas/${project.lead_id}`);
+                            }}
+                          >
                             {project.company_name || "—"}
                           </TableCell>
                           <TableCell>

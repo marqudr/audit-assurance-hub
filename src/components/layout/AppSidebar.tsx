@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   LayoutDashboard,
   Users,
+  Building2,
   FolderKanban,
   Bot,
   MessageSquare,
@@ -18,6 +19,7 @@ import { useIsAdmin } from "@/hooks/useUserRole";
 const baseNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "CRM", url: "/crm", icon: Users },
+  { title: "Empresas", url: "/empresas", icon: Building2 },
   { title: "Operations", url: "/operations", icon: FolderKanban },
   { title: "Agent Space", url: "/agent-space", icon: MessageSquare },
 ];
