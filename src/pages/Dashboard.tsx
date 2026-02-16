@@ -5,6 +5,9 @@ import { SalesFunnel } from "@/components/dashboard/SalesFunnel";
 import { DeliveryHealth } from "@/components/dashboard/DeliveryHealth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { useUserRoles } from "@/hooks/useUserRole";
+import { Eye } from "lucide-react";
 
 const SectionHeader = ({ title, description }: { title: string; description: string }) => (
   <div>
@@ -13,8 +16,17 @@ const SectionHeader = ({ title, description }: { title: string; description: str
   </div>
 );
 
+function useVisibilityScope() {
+  const { data: roles } = useUserRoles();
+  if (!roles) return { label: "Carregando...", variant: "outline" as const };
+  if (roles.includes("admin")) return { label: "Visão: Empresa Toda", variant: "default" as const };
+  if (roles.includes("gestor")) return { label: "Visão: Meu Time", variant: "secondary" as const };
+  return { label: "Visão: Meus Dados", variant: "outline" as const };
+}
+
 const Dashboard = () => {
   const { metrics, isLoading } = useDashboardMetrics();
+  const scope = useVisibilityScope();
 
   if (isLoading || !metrics) {
     return (
@@ -35,9 +47,15 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Cockpit Executivo — Visão Geral</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Cockpit Executivo — Visão Geral</p>
+        </div>
+        <Badge variant={scope.variant} className="gap-1.5">
+          <Eye className="h-3.5 w-3.5" />
+          {scope.label}
+        </Badge>
       </div>
 
       {/* Seção 1: Receita & Financeiro */}

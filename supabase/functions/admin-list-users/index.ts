@@ -20,7 +20,6 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is admin
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -29,31 +28,26 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Check admin role
     const { data: hasAdmin } = await adminClient.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
     });
     if (!hasAdmin) throw new Error("Forbidden");
 
-    // List all auth users
     const { data: authData, error: authError } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
     if (authError) throw authError;
 
-    // Get profiles
     const { data: profiles, error: profilesError } = await adminClient
       .from("profiles")
       .select("*")
       .order("created_at", { ascending: false });
     if (profilesError) throw profilesError;
 
-    // Get roles
     const { data: roles, error: rolesError } = await adminClient
       .from("user_roles")
       .select("*");
     if (rolesError) throw rolesError;
 
-    // Get leads (companies) for company_name mapping
     const { data: leads } = await adminClient
       .from("leads")
       .select("id, company_name");
@@ -62,24 +56,28 @@ serve(async (req) => {
       companyMap[l.id] = l.company_name;
     }
 
-    // Build email map from auth users
     const emailMap: Record<string, string> = {};
     for (const u of authData.users) {
       emailMap[u.id] = u.email || "";
     }
 
-    // Build roles map
     const rolesMap: Record<string, string[]> = {};
     for (const r of roles || []) {
       if (!rolesMap[r.user_id]) rolesMap[r.user_id] = [];
       rolesMap[r.user_id].push(r.role);
     }
 
-    // Combine
+    // Build manager name map from profiles
+    const profileMap: Record<string, string> = {};
+    for (const p of profiles || []) {
+      profileMap[p.user_id] = p.display_name || emailMap[p.user_id] || "";
+    }
+
     const result = (profiles || []).map((p: any) => ({
       ...p,
       email: emailMap[p.user_id] || "",
       company_name: p.company_id ? (companyMap[p.company_id] || null) : null,
+      manager_name: p.manager_id ? (profileMap[p.manager_id] || null) : null,
       user_roles: (rolesMap[p.user_id] || []).map((role: string) => ({ role })),
     }));
 
