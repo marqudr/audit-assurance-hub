@@ -52,11 +52,12 @@ export function AppHeader({ onOpenCommandPalette }: AppHeaderProps) {
   const currentPage = routeNames[location.pathname] || "InnovaSys";
   const { profile } = useProfile();
   const { data: roles } = useUserRoles();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
 
   const displayName = profile?.display_name || "Usuário";
   const initials = getInitials(profile?.display_name);
   const primaryRole = roles?.[0] ? roleLabels[roles[0]] || roles[0] : "—";
+  const userEmail = user?.email || "";
 
   return (
     <header className="flex items-center justify-between h-14 px-4 border-b bg-card">
@@ -99,10 +100,11 @@ export function AppHeader({ onOpenCommandPalette }: AppHeaderProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{displayName}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+              <div className="flex items-center gap-1.5 mt-1">
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   {primaryRole}
                 </Badge>
