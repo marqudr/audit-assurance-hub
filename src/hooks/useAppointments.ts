@@ -58,6 +58,24 @@ export function useCreateAppointment() {
   });
 }
 
+export function useAppointmentsByDate(date: string) {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["appointments", date, user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .eq("appointment_date", date)
+        .order("appointment_time", { ascending: true });
+      if (error) throw error;
+      return data as Appointment[];
+    },
+    enabled: !!user && !!date,
+  });
+}
+
 export function useDeleteAppointment() {
   const queryClient = useQueryClient();
 

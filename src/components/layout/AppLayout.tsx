@@ -24,7 +24,7 @@ export function AppLayout() {
     <div className="flex min-h-screen w-full">
       <AppSidebar />
       <div className="flex flex-col flex-1 min-w-0">
-        <AppHeader onOpenCommandPalette={handleOpenCommandPalette} />
+        <AppHeader />
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           <Outlet />
         </main>
