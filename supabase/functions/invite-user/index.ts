@@ -58,7 +58,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Invite user via Supabase Auth
+    // Try to invite; if user exists, look them up instead
+    let newUserId: string;
     const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
       data: {
         user_type: user_type || "staff",
@@ -68,13 +69,32 @@ Deno.serve(async (req) => {
     });
 
     if (inviteError) {
-      return new Response(JSON.stringify({ error: inviteError.message }), { status: 400, headers: corsHeaders });
+      if (inviteError.message.includes("already been registered")) {
+        // User exists — find them by email
+        const { data: { users: existingUsers } } = await adminClient.auth.admin.listUsers();
+        const existing = existingUsers?.find((u: any) => u.email === email);
+        if (!existing) {
+          return new Response(JSON.stringify({ error: "User exists but could not be found" }), { status: 400, headers: corsHeaders });
+        }
+        newUserId = existing.id;
+
+        // Update their profile
+        await adminClient.from("profiles").update({
+          user_type: user_type || "staff",
+          company_id: company_id || null,
+          manager_id: manager_id || null,
+        }).eq("user_id", newUserId);
+      } else {
+        return new Response(JSON.stringify({ error: inviteError.message }), { status: 400, headers: corsHeaders });
+      }
+    } else {
+      newUserId = inviteData.user.id;
     }
 
-    const newUserId = inviteData.user.id;
-
-    // Assign role
+    // Assign role (upsert — delete old then insert)
     if (role) {
+      // Remove existing roles, then insert the new one
+      await adminClient.from("user_roles").delete().eq("user_id", newUserId);
       await adminClient.from("user_roles").insert({
         user_id: newUserId,
         role: role,
