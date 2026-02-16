@@ -1,54 +1,78 @@
 
 
-## Esqueci Minha Senha + Primeiro Login via Convite
+## Convite com Nome + Perfil no Portal + Gestao de Usuarios pelo Cliente Admin
 
-### Problema Atual
-- Nao existe opcao "Esqueci minha senha" na tela de login
-- Usuarios convidados (staff ou client) recebem email de convite mas nao ha tela para definir senha no primeiro acesso
+### 1. Adicionar campo "Nome" ao convite de usuario
 
-### Como Funciona o Fluxo de Convite
-Quando `inviteUserByEmail` e usado, o email contem um link magic que, ao ser clicado, autentica o usuario com um evento `PASSWORD_RECOVERY`. O mesmo fluxo serve para redefinicao de senha. Portanto, uma unica pagina `/reset-password` resolve ambos os cenarios.
+**Arquivos modificados:**
+- `src/components/admin/InviteUserModal.tsx` -- Adicionar campo "Nome" ao formulario
+- `src/components/company/CompanyUsers.tsx` -- Adicionar campo "Nome" ao dialog de convite de empresa
+- `src/hooks/useUsers.ts` -- Incluir `display_name` no payload do `inviteUser`
+- `supabase/functions/invite-user/index.ts` -- Receber `display_name` e salvar no profile apos criacao do usuario
 
-### Mudancas
+O edge function recebera o campo `display_name` e atualizara o profile do usuario convidado com esse nome.
 
-#### 1. Pagina `/reset-password` (novo arquivo)
-- `src/pages/ResetPassword.tsx`
-- Detecta o evento `PASSWORD_RECOVERY` via `onAuthStateChange`
-- Exibe formulario com campos "Nova senha" e "Confirmar senha"
-- Chama `supabase.auth.updateUser({ password })` para salvar
-- Apos sucesso, redireciona para `/` (staff) ou `/portal` (client) conforme `user_type`
-- Funciona tanto para "esqueci minha senha" quanto para primeiro login via convite
+### 2. Badge de perfil no Portal do Cliente
 
-#### 2. Atualizar tela de Login (`Auth.tsx`)
-- Adicionar link "Esqueci minha senha?" abaixo do campo de senha
-- Ao clicar, exibir campo de email e botao para enviar link de recuperacao
-- Chamar `supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/reset-password' })`
-- Exibir mensagem de confirmacao apos envio
+**Arquivo modificado:**
+- `src/pages/portal/PortalLayout.tsx` -- Adicionar badge de perfil no rodape da sidebar com avatar (iniciais) e nome do usuario. Ao clicar, navega para `/portal/configuracoes`.
 
-#### 3. Registrar rota no `App.tsx`
-- Adicionar `<Route path="/reset-password" element={<ResetPassword />} />` como rota publica (fora de ProtectedRoute)
+O badge exibira:
+- Avatar circular com iniciais do nome (ou imagem se `avatar_url` existir)
+- Nome do usuario truncado
+- Clicavel, levando a configuracoes
+
+### 3. Pagina de Configuracoes do Portal (`/portal/configuracoes`)
+
+**Novo arquivo:**
+- `src/pages/portal/PortalSettings.tsx` -- Pagina de configuracoes dedicada ao portal do cliente
+
+Conteudo:
+- **Secao Perfil**: campos editaveis de Nome e Avatar URL, com botao Salvar (reutiliza `useProfile`)
+- **Secao Gestao de Usuarios** (visivel apenas para role `cfo`): lista usuarios da empresa e permite convidar novos, reutilizando a logica de `CompanyUsers` mas adaptada ao contexto do portal
+
+**Arquivos modificados:**
+- `src/App.tsx` -- Adicionar rota `/portal/configuracoes` dentro do bloco `ClientRoute`
+- `src/pages/portal/PortalLayout.tsx` -- Atualizar nav item "Configuracoes" para apontar para `/portal/configuracoes` em vez de `/settings`
+
+### 4. Permissao de convite pelo Cliente Admin (CFO)
+
+O edge function `invite-user` ja permite que gestores convidem usuarios client. Precisamos estender para que usuarios com role `cfo` que sao do tipo `client` tambem possam convidar usuarios para sua propria empresa.
+
+**Arquivo modificado:**
+- `supabase/functions/invite-user/index.ts` -- Adicionar verificacao: se o caller tem role `cfo` E `user_type = 'client'`, permitir convite de usuarios client vinculados ao `company_id` do caller (nao permite escolher outra empresa)
 
 ### Detalhes Tecnicos
 
-**`src/pages/ResetPassword.tsx`:**
-- Usa `supabase.auth.onAuthStateChange` para detectar `PASSWORD_RECOVERY`
-- Valida que senha tem minimo 6 caracteres e que ambos campos coincidem
-- Apos `updateUser`, consulta `profiles.user_type` para redirecionar corretamente
-- Se nao houver evento de recovery (acesso direto), mostra mensagem informativa
+**Edge function `invite-user` -- mudancas:**
+```
+Recebe novo campo: display_name (string, opcional)
+Apos criar/encontrar usuario:
+  - Atualiza profiles.display_name com o valor recebido
 
-**`src/pages/Auth.tsx`:**
-- Novo state `isForgotPassword` para alternar entre login e recuperacao
-- No modo "esqueci senha", exibe apenas campo email e botao "Enviar link"
-- `redirectTo` aponta para `window.location.origin + '/reset-password'`
+Nova permissao:
+  - Se caller tem role 'cfo' e user_type 'client':
+    - Pode convidar apenas user_type 'client'
+    - company_id e forcado para o company_id do caller (ignora valor enviado)
+    - Roles permitidas: 'cfo' ou 'user' apenas
+```
 
-**`src/App.tsx`:**
-- Nova rota publica `/reset-password` no mesmo nivel de `/auth`
+**`PortalSettings.tsx` -- estrutura:**
+- Card Perfil: Nome (Input), Avatar URL (Input), botao Salvar
+- Card Gestao de Usuarios (condicional `role === 'cfo'`):
+  - Lista de usuarios da empresa via `useCompanyUsers(profile.company_id)`
+  - Botao "Convidar Usuario" abre dialog com campos: Nome, Email, Perfil (Admin/Usuario)
+  - Convite chama `invite-user` passando `company_id` do profile do caller
 
-### Arquivos
+**Resumo de arquivos:**
 
-**Novos (1):**
-- `src/pages/ResetPassword.tsx`
+| Acao | Arquivo |
+|------|---------|
+| Novo | `src/pages/portal/PortalSettings.tsx` |
+| Modificar | `src/components/admin/InviteUserModal.tsx` |
+| Modificar | `src/components/company/CompanyUsers.tsx` |
+| Modificar | `src/hooks/useUsers.ts` |
+| Modificar | `supabase/functions/invite-user/index.ts` |
+| Modificar | `src/pages/portal/PortalLayout.tsx` |
+| Modificar | `src/App.tsx` |
 
-**Modificados (2):**
-- `src/pages/Auth.tsx` -- adicionar "Esqueci minha senha"
-- `src/App.tsx` -- registrar rota `/reset-password`
