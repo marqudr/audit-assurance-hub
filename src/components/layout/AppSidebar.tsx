@@ -20,7 +20,7 @@ const baseNavItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "CRM", url: "/crm", icon: Users },
   { title: "Empresas", url: "/empresas", icon: Building2 },
-  { title: "Operations", url: "/operations", icon: FolderKanban },
+  { title: "Operações", url: "/operations", icon: FolderKanban },
   { title: "Agent Space", url: "/agent-space", icon: MessageSquare },
 ];
 
