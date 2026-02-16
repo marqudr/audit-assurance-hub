@@ -30,6 +30,7 @@ export function UserTable() {
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Empresa</TableHead>
             <TableHead>Tipo</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
@@ -43,6 +44,7 @@ export function UserTable() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.display_name || "—"}</TableCell>
                 <TableCell className="text-muted-foreground text-sm">{user.email || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{user.company_name || "—"}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{user.user_type === "client" ? "Cliente" : "Staff"}</Badge>
                 </TableCell>

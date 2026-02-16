@@ -53,6 +53,15 @@ serve(async (req) => {
       .select("*");
     if (rolesError) throw rolesError;
 
+    // Get leads (companies) for company_name mapping
+    const { data: leads } = await adminClient
+      .from("leads")
+      .select("id, company_name");
+    const companyMap: Record<string, string> = {};
+    for (const l of leads || []) {
+      companyMap[l.id] = l.company_name;
+    }
+
     // Build email map from auth users
     const emailMap: Record<string, string> = {};
     for (const u of authData.users) {
@@ -70,6 +79,7 @@ serve(async (req) => {
     const result = (profiles || []).map((p: any) => ({
       ...p,
       email: emailMap[p.user_id] || "",
+      company_name: p.company_id ? (companyMap[p.company_id] || null) : null,
       user_roles: (rolesMap[p.user_id] || []).map((role: string) => ({ role })),
     }));
 
