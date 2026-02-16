@@ -1,31 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface AdminUser {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  user_type: string;
+  company_id: string | null;
+  manager_id: string | null;
+  is_deleted: boolean;
+  created_at: string;
+  email: string;
+  user_roles: { role: string }[];
+}
+
 export function useUsers() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["admin-users"],
     queryFn: async () => {
-      // Fetch profiles and roles separately (no FK relationship between them)
-      const [profilesRes, rolesRes] = await Promise.all([
-        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("*"),
-      ]);
-      if (profilesRes.error) throw profilesRes.error;
-      if (rolesRes.error) throw rolesRes.error;
-
-      // Group roles by user_id
-      const rolesByUser: Record<string, string[]> = {};
-      for (const r of rolesRes.data || []) {
-        if (!rolesByUser[r.user_id]) rolesByUser[r.user_id] = [];
-        rolesByUser[r.user_id].push(r.role);
-      }
-
-      return (profilesRes.data || []).map((p) => ({
-        ...p,
-        user_roles: (rolesByUser[p.user_id] || []).map((role) => ({ role })),
-      }));
+      const { data, error } = await supabase.functions.invoke("admin-list-users");
+      if (error) throw error;
+      return data as AdminUser[];
     },
   });
 
@@ -59,5 +57,30 @@ export function useUsers() {
     },
   });
 
-  return { users: query.data || [], isLoading: query.isLoading, inviteUser, updateUserRole };
+  const updateUserProfile = useMutation({
+    mutationFn: async ({
+      userId,
+      updates,
+    }: {
+      userId: string;
+      updates: { display_name?: string; user_type?: string; avatar_url?: string | null };
+    }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+
+  return {
+    users: query.data || [],
+    isLoading: query.isLoading,
+    inviteUser,
+    updateUserRole,
+    updateUserProfile,
+  };
 }
