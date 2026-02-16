@@ -1,6 +1,8 @@
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -9,20 +11,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2 } from "lucide-react";
+import { Building2, Search } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useProjects } from "@/hooks/useProjects";
+import { maskCnpj } from "@/lib/utils";
 
 const Companies = () => {
   const navigate = useNavigate();
   const { data: leads = [], isLoading: leadsLoading } = useLeads();
   const { data: projects = [] } = useProjects();
+  const [search, setSearch] = useState("");
 
-  const companiesWithMetrics = leads.map((lead) => {
-    const companyProjects = projects.filter((p) => p.lead_id === lead.id);
-    const totalValue = companyProjects.reduce((sum, p) => sum + (p.deal_value || 0), 0);
-    return { ...lead, projectCount: companyProjects.length, totalValue };
-  });
+  const companiesWithMetrics = useMemo(() =>
+    leads.map((lead) => {
+      const companyProjects = projects.filter((p) => p.lead_id === lead.id);
+      const totalValue = companyProjects.reduce((sum, p) => sum + (p.deal_value || 0), 0);
+      return { ...lead, projectCount: companyProjects.length, totalValue };
+    }),
+    [leads, projects]
+  );
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return companiesWithMetrics;
+    const q = search.toLowerCase().replace(/\D/g, "") || search.toLowerCase();
+    return companiesWithMetrics.filter((c) => {
+      const nameMatch = c.company_name.toLowerCase().includes(search.toLowerCase());
+      const cnpjDigits = c.cnpj?.replace(/\D/g, "") || "";
+      const searchDigits = search.replace(/\D/g, "");
+      const cnpjMatch = searchDigits.length > 0 && cnpjDigits.includes(searchDigits);
+      return nameMatch || cnpjMatch;
+    });
+  }, [companiesWithMetrics, search]);
 
   const icpBadgeClass = (score: number | null) => {
     if (score == null) return "";
@@ -33,11 +52,22 @@ const Companies = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-          <Building2 className="h-6 w-6" /> Empresas
-        </h1>
-        <p className="text-sm text-muted-foreground">Cadastro e histórico completo das empresas</p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <Building2 className="h-6 w-6" /> Empresas
+          </h1>
+          <p className="text-sm text-muted-foreground">Cadastro e histórico completo das empresas</p>
+        </div>
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nome ou CNPJ..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <Card>
@@ -61,21 +91,21 @@ const Companies = () => {
                     Carregando empresas...
                   </TableCell>
                 </TableRow>
-              ) : companiesWithMetrics.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                    Nenhuma empresa cadastrada.
+                    {search ? "Nenhuma empresa encontrada." : "Nenhuma empresa cadastrada."}
                   </TableCell>
                 </TableRow>
               ) : (
-                companiesWithMetrics.map((company) => (
+                filtered.map((company) => (
                   <TableRow
                     key={company.id}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/empresas/${company.id}`)}
                   >
                     <TableCell className="font-medium">{company.company_name}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{company.cnpj || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs font-mono">{maskCnpj(company.cnpj)}</TableCell>
                     <TableCell className="text-xs">{company.sector || "—"}</TableCell>
                     <TableCell className="text-xs">{company.tax_regime || "—"}</TableCell>
                     <TableCell>

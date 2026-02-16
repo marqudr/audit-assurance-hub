@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { maskCnpj } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -420,7 +421,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                 <Badge variant="outline" className={status.className}>{status.label}</Badge>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div><span className="text-muted-foreground">CNPJ</span><p className="font-medium">{lead.cnpj || "—"}</p></div>
+                <div><span className="text-muted-foreground">CNPJ</span><p className="font-medium">{maskCnpj(lead.cnpj)}</p></div>
                 <div><span className="text-muted-foreground">CNAE</span><p className="font-medium">{lead.cnae || "—"}</p></div>
                 <div><span className="text-muted-foreground">Setor</span><p className="font-medium">{lead.sector || "—"}</p></div>
                 <div><span className="text-muted-foreground">Faixa de Receita</span><p className="font-medium">{lead.revenue_range || "—"}</p></div>
