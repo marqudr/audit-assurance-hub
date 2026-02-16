@@ -49,58 +49,80 @@ export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAler
   const stalled5 = stalled.filter((s) => s.days >= 5 && s.days < 7).length;
   const stalled3 = stalled.filter((s) => s.days >= 3 && s.days < 5).length;
 
-  const hasAlerts = noContact.length > 0 || overdue.length > 0 || stalled.length > 0;
-
   const alertsGrid = (
     <div className={inline ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 sm:grid-cols-3 gap-3"}>
+      {/* Sem Contato */}
       <AlertCard
-        icon={<PhoneOff className="h-4 w-4" />}
+        icon={<PhoneOff className="h-5 w-5" />}
         title="Sem Contato"
         count={noContact.length}
         description="Projetos novos sem nenhum contato"
-        colorClass={noContact.length > 0 ? "text-destructive" : "text-muted-foreground"}
+        bgClass="bg-red-50 dark:bg-red-950/30"
+        borderClass="border-red-200 dark:border-red-800"
+        iconColor="text-red-600 dark:text-red-400"
+        countColor="text-red-700 dark:text-red-300"
         items={noContact}
         onItemClick={onCardClick}
-        expanded={inline}
         maxItems={inline ? 10 : 5}
       />
+
+      {/* Atrasados */}
       <AlertCard
-        icon={<Clock className="h-4 w-4" />}
+        icon={<Clock className="h-5 w-5" />}
         title="Atrasados"
         count={overdue.length}
         description="Tarefas ou ações vencidas"
-        colorClass={overdue.length > 0 ? "text-destructive" : "text-muted-foreground"}
+        bgClass="bg-amber-50 dark:bg-amber-950/30"
+        borderClass="border-amber-200 dark:border-amber-800"
+        iconColor="text-amber-600 dark:text-amber-400"
+        countColor="text-amber-700 dark:text-amber-300"
         items={overdue}
         onItemClick={onCardClick}
-        expanded={inline}
         maxItems={inline ? 10 : 5}
       />
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs font-medium">
-          <AlertTriangle className="h-4 w-4" />
-          Parados ({stalled.length})
+
+      {/* Parados */}
+      <div className={`rounded-lg border p-3 flex flex-col gap-2 ${
+        stalled.length > 0
+          ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800"
+          : "bg-muted/30 border-border opacity-60"
+      }`}>
+        <div className="flex items-center gap-2">
+          <div className={`rounded-md p-1.5 ${stalled.length > 0 ? "bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400" : "bg-muted text-muted-foreground"}`}>
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className={`text-2xl font-bold leading-none ${stalled.length > 0 ? "text-orange-700 dark:text-orange-300" : "text-muted-foreground"}`}>
+              {stalled.length}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">Parados</p>
+          </div>
+          {stalled.length === 0 && <CheckCircle2 className="h-4 w-4 text-green-500" />}
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          {stalled7 > 0 && (
-            <span className="px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium">7d+: {stalled7}</span>
-          )}
-          {stalled5 > 0 && (
-            <span className="px-1.5 py-0.5 rounded bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200 font-medium">5d: {stalled5}</span>
-          )}
-          {stalled3 > 0 && (
-            <span className="px-1.5 py-0.5 rounded bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 font-medium">3d: {stalled3}</span>
-          )}
-          {stalled.length === 0 && <span className="text-muted-foreground">Nenhum</span>}
-        </div>
+
         {stalled.length > 0 && (
-          <div className="space-y-0.5 mt-1 max-h-40 overflow-y-auto">
+          <div className="flex flex-wrap gap-1.5">
+            {stalled7 > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-destructive/20 text-destructive">7d+: {stalled7}</span>
+            )}
+            {stalled5 > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200">5d: {stalled5}</span>
+            )}
+            {stalled3 > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-yellow-200 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">3d: {stalled3}</span>
+            )}
+          </div>
+        )}
+
+        {stalled.length > 0 && (
+          <div className="space-y-0.5 max-h-40 overflow-y-auto">
             {stalled.slice(0, inline ? 10 : 5).map(({ project, days }) => (
               <button
                 key={project.id}
                 onClick={() => onCardClick(project)}
-                className="block w-full text-left text-xs truncate hover:underline text-muted-foreground"
+                className="block w-full text-left text-xs truncate rounded px-2 py-1 hover:bg-orange-100 dark:hover:bg-orange-900/40 text-muted-foreground"
               >
-                {project.name} ({days}d)
+                {project.name} <span className="text-[10px] opacity-70">({days}d)</span>
               </button>
             ))}
           </div>
@@ -114,14 +136,9 @@ export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAler
   }
 
   return (
-    <Card className={hasAlerts ? "border-destructive/30 bg-destructive/5" : "border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-800"}>
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          {hasAlerts ? (
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          )}
           O que eu faço agora?
         </CardTitle>
       </CardHeader>
@@ -137,36 +154,58 @@ function AlertCard({
   title,
   count,
   description,
-  colorClass,
+  bgClass,
+  borderClass,
+  iconColor,
+  countColor,
   items,
   onItemClick,
-  expanded,
   maxItems = 5,
 }: {
   icon: React.ReactNode;
   title: string;
   count: number;
   description: string;
-  colorClass: string;
+  bgClass: string;
+  borderClass: string;
+  iconColor: string;
+  countColor: string;
   items: Project[];
   onItemClick: (project: Project) => void;
-  expanded?: boolean;
   maxItems?: number;
 }) {
+  const isEmpty = count === 0;
+
   return (
-    <div className="space-y-1">
-      <div className={`flex items-center gap-2 text-xs font-medium ${colorClass}`}>
-        {icon}
-        {title}: <span className="text-base font-bold">{count}</span>
+    <div className={`rounded-lg border p-3 flex flex-col gap-2 ${
+      isEmpty ? "bg-muted/30 border-border opacity-60" : `${bgClass} ${borderClass}`
+    }`}>
+      <div className="flex items-center gap-2">
+        <div className={`rounded-md p-1.5 ${
+          isEmpty ? "bg-muted text-muted-foreground" : `${bgClass} ${iconColor}`
+        }`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <p className={`text-2xl font-bold leading-none ${isEmpty ? "text-muted-foreground" : countColor}`}>
+            {count}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{title}</p>
+        </div>
+        {isEmpty && <CheckCircle2 className="h-4 w-4 text-green-500" />}
       </div>
-      <p className="text-[10px] text-muted-foreground">{description}</p>
+
+      {!isEmpty && (
+        <p className="text-[10px] text-muted-foreground">{description}</p>
+      )}
+
       {items.length > 0 && (
-        <div className={`space-y-0.5 ${expanded ? "max-h-60" : "max-h-20"} overflow-y-auto`}>
+        <div className="space-y-0.5 max-h-40 overflow-y-auto">
           {items.slice(0, maxItems).map((project) => (
             <button
               key={project.id}
               onClick={() => onItemClick(project)}
-              className="block w-full text-left text-xs truncate hover:underline text-muted-foreground"
+              className={`block w-full text-left text-xs truncate rounded px-2 py-1 hover:bg-white/60 dark:hover:bg-white/10 text-muted-foreground`}
             >
               {project.name}
             </button>
