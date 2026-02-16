@@ -76,11 +76,25 @@ export function useUsers() {
     },
   });
 
+  const toggleUserActive = useMutation({
+    mutationFn: async ({ userId, active }: { userId: string; active: boolean }) => {
+      const { data, error } = await supabase.functions.invoke("admin-toggle-user", {
+        body: { user_id: userId, active },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+
   return {
     users: query.data || [],
     isLoading: query.isLoading,
     inviteUser,
     updateUserRole,
     updateUserProfile,
+    toggleUserActive,
   };
 }
