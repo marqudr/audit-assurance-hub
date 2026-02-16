@@ -1,13 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Building2, FolderKanban, Clock, FileText } from "lucide-react";
+import { ArrowLeft, Building2, FolderKanban, Clock, FileText, Users } from "lucide-react";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 import { useProjects, type Project } from "@/hooks/useProjects";
 import { CompanyOverview } from "@/components/company/CompanyOverview";
 import { CompanyProjects } from "@/components/company/CompanyProjects";
 import { CompanyTimeline } from "@/components/company/CompanyTimeline";
 import { CompanyDataRoom } from "@/components/company/CompanyDataRoom";
+import { CompanyUsers } from "@/components/company/CompanyUsers";
 import { ProjectDetailSheet } from "@/components/crm/ProjectDetailSheet";
 import { useState } from "react";
 
@@ -73,6 +74,9 @@ const CompanyDetail = () => {
           <TabsTrigger value="dataroom" className="gap-1.5">
             <FileText className="h-4 w-4" /> Data Room
           </TabsTrigger>
+          <TabsTrigger value="users" className="gap-1.5">
+            <Users className="h-4 w-4" /> Usuários
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -86,6 +90,9 @@ const CompanyDetail = () => {
         </TabsContent>
         <TabsContent value="dataroom">
           <CompanyDataRoom leadId={lead.id} />
+        </TabsContent>
+        <TabsContent value="users">
+          <CompanyUsers companyId={lead.id} companyName={lead.company_name} />
         </TabsContent>
       </Tabs>
 
