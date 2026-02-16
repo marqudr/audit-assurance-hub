@@ -1,4 +1,3 @@
-// useUsers hook - admin user management
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +10,7 @@ export interface AdminUser {
   company_id: string | null;
   company_name: string | null;
   manager_id: string | null;
+  manager_name: string | null;
   is_deleted: boolean;
   created_at: string;
   email: string;
@@ -32,7 +32,7 @@ export function useUsers() {
   const inviteUser = useMutation({
     mutationFn: async (payload: {
       email: string;
-      role: string;
+      roles: string[];
       user_type: string;
       display_name?: string;
       company_id?: string | null;
@@ -49,11 +49,14 @@ export function useUsers() {
     },
   });
 
-  const updateUserRole = useMutation({
-    mutationFn: async ({ userId, oldRole, newRole }: { userId: string; oldRole: string; newRole: string }) => {
-      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", oldRole as any);
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
-      if (error) throw error;
+  const updateUserRoles = useMutation({
+    mutationFn: async ({ userId, roles }: { userId: string; roles: string[] }) => {
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+      if (roles.length > 0) {
+        const inserts = roles.map((role) => ({ user_id: userId, role: role as any }));
+        const { error } = await supabase.from("user_roles").insert(inserts);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
@@ -66,7 +69,7 @@ export function useUsers() {
       updates,
     }: {
       userId: string;
-      updates: { display_name?: string; user_type?: string; avatar_url?: string | null };
+      updates: { display_name?: string; user_type?: string; avatar_url?: string | null; manager_id?: string | null };
     }) => {
       const { error } = await supabase
         .from("profiles")
@@ -96,7 +99,7 @@ export function useUsers() {
     users: query.data || [],
     isLoading: query.isLoading,
     inviteUser,
-    updateUserRole,
+    updateUserRoles,
     updateUserProfile,
     toggleUserActive,
   };

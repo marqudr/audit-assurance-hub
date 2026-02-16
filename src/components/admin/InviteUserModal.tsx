@@ -4,9 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUsers } from "@/hooks/useUsers";
 import { useLeads } from "@/hooks/useLeads";
 import { toast } from "@/hooks/use-toast";
+
+const ALL_ROLES = [
+  { value: "admin", label: "Admin" },
+  { value: "gestor", label: "Gestor" },
+  { value: "closer", label: "Closer" },
+  { value: "consultor", label: "Consultor" },
+  { value: "cfo", label: "Admin Cliente" },
+  { value: "user", label: "Usuário" },
+];
 
 interface InviteUserModalProps {
   open: boolean;
@@ -16,29 +26,44 @@ interface InviteUserModalProps {
 export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("user");
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(["user"]);
   const [userType, setUserType] = useState("staff");
   const [companyId, setCompanyId] = useState<string>("");
-  const { inviteUser } = useUsers();
+  const [managerId, setManagerId] = useState<string>("");
+  const { inviteUser, users } = useUsers();
   const { data: leads } = useLeads();
+
+  const gestores = users.filter((u) => u.user_roles?.some((r) => r.role === "gestor"));
+
+  const toggleRole = (role: string) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
 
   const handleSubmit = async () => {
     if (!email) return;
+    if (selectedRoles.length === 0) {
+      toast({ title: "Selecione ao menos uma role", variant: "destructive" });
+      return;
+    }
     try {
       await inviteUser.mutateAsync({
         email,
-        role,
+        roles: selectedRoles,
         user_type: userType,
         display_name: displayName || undefined,
         company_id: userType === "client" ? companyId || null : null,
+        manager_id: managerId || null,
       });
       toast({ title: "Convite enviado", description: `Convite enviado para ${email}` });
       onOpenChange(false);
       setDisplayName("");
       setEmail("");
-      setRole("user");
+      setSelectedRoles(["user"]);
       setUserType("staff");
       setCompanyId("");
+      setManagerId("");
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
@@ -70,16 +95,33 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Label>Roles</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {ALL_ROLES.map((r) => (
+                <div key={r.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`invite-role-${r.value}`}
+                    checked={selectedRoles.includes(r.value)}
+                    onCheckedChange={() => toggleRole(r.value)}
+                  />
+                  <Label htmlFor={`invite-role-${r.value}`} className="text-sm font-normal cursor-pointer">
+                    {r.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Gestor</Label>
+            <Select value={managerId} onValueChange={setManagerId}>
+              <SelectTrigger><SelectValue placeholder="Sem gestor" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="gestor">Gestor</SelectItem>
-                <SelectItem value="closer">Closer</SelectItem>
-                <SelectItem value="consultor">Consultor</SelectItem>
-                <SelectItem value="cfo">CFO</SelectItem>
-                <SelectItem value="user">Usuário</SelectItem>
+                <SelectItem value="">Sem gestor</SelectItem>
+                {gestores.map((g) => (
+                  <SelectItem key={g.user_id} value={g.user_id}>
+                    {g.display_name || g.email}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -2,24 +2,22 @@ import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUsers, AdminUser } from "@/hooks/useUsers";
-import { toast } from "@/hooks/use-toast";
 import { Pencil } from "lucide-react";
 import { EditUserModal } from "./EditUserModal";
 
-export function UserTable() {
-  const { users, isLoading, updateUserRole } = useUsers();
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
+  gestor: "Gestor",
+  closer: "Closer",
+  consultor: "Consultor",
+  cfo: "Admin Cliente",
+  user: "Usuário",
+};
 
-  const handleRoleChange = async (userId: string, oldRole: string, newRole: string) => {
-    try {
-      await updateUserRole.mutateAsync({ userId, oldRole, newRole });
-      toast({ title: "Role atualizado" });
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
-  };
+export function UserTable() {
+  const { users, isLoading } = useUsers();
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Carregando...</div>;
 
@@ -32,14 +30,15 @@ export function UserTable() {
             <TableHead>Email</TableHead>
             <TableHead>Empresa</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>Role</TableHead>
+            <TableHead>Roles</TableHead>
+            <TableHead>Gestor</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => {
-            const currentRole = user.user_roles?.[0]?.role || "user";
+            const roles = user.user_roles?.map((r) => r.role) || [];
             return (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.display_name || "—"}</TableCell>
@@ -49,19 +48,16 @@ export function UserTable() {
                   <Badge variant="outline">{user.user_type === "client" ? "Cliente" : "Staff"}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Select value={currentRole} onValueChange={(v) => handleRoleChange(user.user_id, currentRole, v)}>
-                    <SelectTrigger className="w-32 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="gestor">Gestor</SelectItem>
-                      <SelectItem value="closer">Closer</SelectItem>
-                      <SelectItem value="consultor">Consultor</SelectItem>
-                      <SelectItem value="cfo">Admin Cliente</SelectItem>
-                      <SelectItem value="user">Usuário</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap gap-1">
+                    {roles.length > 0 ? roles.map((r) => (
+                      <Badge key={r} variant="secondary" className="text-xs">
+                        {ROLE_LABELS[r] || r}
+                      </Badge>
+                    )) : <span className="text-xs text-muted-foreground">—</span>}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {user.manager_name || "—"}
                 </TableCell>
                 <TableCell>
                   {user.is_deleted ? (
