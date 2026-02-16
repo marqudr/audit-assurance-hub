@@ -138,7 +138,7 @@ const CRM = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Projetos Ativos</p>
-              <p className="text-2xl font-bold">{isLoading ? "—" : activeProjects}</p>
+              <p className="text-2xl font-bold font-mono">{isLoading ? "—" : activeProjects}</p>
             </div>
             <Badge variant="secondary" className="ml-auto text-xs">
               <TrendingUp className="h-3 w-3 mr-1" /> +5%
@@ -152,7 +152,7 @@ const CRM = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Valor dos Negócios</p>
-              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(totalDealValue)}</p>
+              <p className="text-2xl font-bold font-mono">{isLoading ? "—" : formatMetric(totalDealValue)}</p>
             </div>
           </CardContent>
         </Card>
@@ -163,7 +163,7 @@ const CRM = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Receita Potencial</p>
-              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(totalBudget)}</p>
+              <p className="text-2xl font-bold font-mono">{isLoading ? "—" : formatMetric(totalBudget)}</p>
             </div>
           </CardContent>
         </Card>
@@ -174,7 +174,7 @@ const CRM = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Ticket Médio</p>
-              <p className="text-2xl font-bold">{isLoading ? "—" : formatMetric(avgDeal)}</p>
+              <p className="text-2xl font-bold font-mono">{isLoading ? "—" : formatMetric(avgDeal)}</p>
             </div>
           </CardContent>
         </Card>

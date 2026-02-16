@@ -113,7 +113,7 @@ export function KanbanCard({ project, checklist, onClick }: KanbanCardProps) {
           {completed}/{total}
         </span>
         {dealValue && (
-          <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+          <span className="flex items-center gap-1 text-emerald-600 font-semibold font-mono">
             <DollarSign className="h-3 w-3" />
             {dealValue}
           </span>
@@ -124,7 +124,7 @@ export function KanbanCard({ project, checklist, onClick }: KanbanCardProps) {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Probabilidade</span>
-            <span className="font-medium">{project.probability}%</span>
+            <span className="font-medium font-mono">{project.probability}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
             <div

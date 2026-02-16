@@ -89,12 +89,12 @@ export function CrmPipelineMetrics({ projects }: CrmPipelineMetricsProps) {
           </div>
           <div className="flex flex-col items-center justify-center">
             <p className="text-xs text-muted-foreground mb-1">Pipeline Ponderado</p>
-            <p className="text-3xl font-bold tracking-tight">{formatBRL(totalWeighted)}</p>
+            <p className="text-3xl font-bold font-mono tracking-tight">{formatBRL(totalWeighted)}</p>
             <div className="mt-2 space-y-0.5 text-xs text-muted-foreground w-full max-w-[200px]">
               {stageData.filter((d) => d.weighted > 0).map((d) => (
                 <div key={d.key} className="flex justify-between">
                   <span>{d.label}</span>
-                  <span className="font-medium">{formatBRL(d.weighted)}</span>
+                  <span className="font-medium font-mono">{formatBRL(d.weighted)}</span>
                 </div>
               ))}
             </div>
@@ -106,7 +106,7 @@ export function CrmPipelineMetrics({ projects }: CrmPipelineMetricsProps) {
             </div>
             <Progress value={goalPercent} className="h-3 mb-2" />
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Realizado: <span className="font-medium">{formatBRL(realized)}</span></span>
+              <span className="text-muted-foreground">Realizado: <span className="font-medium font-mono">{formatBRL(realized)}</span></span>
               <span className={`font-semibold ${goalColor}`}>
                 {goalPercent >= 100 ? "Meta batida! 🎉" : `Faltam ${formatBRL(MONTHLY_GOAL - realized)}`}
               </span>
