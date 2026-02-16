@@ -9,6 +9,7 @@ export interface AdminUser {
   avatar_url: string | null;
   user_type: string;
   company_id: string | null;
+  company_name: string | null;
   manager_id: string | null;
   is_deleted: boolean;
   created_at: string;
