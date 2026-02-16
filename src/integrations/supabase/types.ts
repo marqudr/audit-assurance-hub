@@ -816,7 +816,7 @@ export type Database = {
       is_agent_owner: { Args: { _agent_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "closer" | "consultor" | "cfo" | "user"
+      app_role: "admin" | "closer" | "consultor" | "cfo" | "user" | "gestor"
       lead_status:
         | "novo"
         | "qualificado"
@@ -954,7 +954,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "closer", "consultor", "cfo", "user"],
+      app_role: ["admin", "closer", "consultor", "cfo", "user", "gestor"],
       lead_status: [
         "novo",
         "qualificado",
