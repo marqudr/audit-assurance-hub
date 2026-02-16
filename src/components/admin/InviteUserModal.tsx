@@ -113,10 +113,10 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
           </div>
           <div className="space-y-2">
             <Label>Gestor</Label>
-            <Select value={managerId} onValueChange={setManagerId}>
+            <Select value={managerId || "none"} onValueChange={(val) => setManagerId(val === "none" ? "" : val)}>
               <SelectTrigger><SelectValue placeholder="Sem gestor" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sem gestor</SelectItem>
+                <SelectItem value="none">Sem gestor</SelectItem>
                 {gestores.map((g) => (
                   <SelectItem key={g.user_id} value={g.user_id}>
                     {g.display_name || g.email}
