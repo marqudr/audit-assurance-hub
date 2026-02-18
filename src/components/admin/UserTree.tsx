@@ -33,8 +33,8 @@ function UserNode({ user, onEdit }: { user: AdminUser; onEdit: (u: AdminUser) =>
           </Badge>
         ))}
       </div>
-      {user.company_name && (
-        <Badge variant="outline" className="text-xs">{user.company_name}</Badge>
+      {(user.user_type === "staff" || user.company_name) && (
+        <Badge variant="outline" className="text-xs">{user.user_type === "staff" ? "LISTEC" : user.company_name}</Badge>
       )}
       {user.is_deleted ? (
         <Badge variant="destructive" className="text-xs">Excluído</Badge>
