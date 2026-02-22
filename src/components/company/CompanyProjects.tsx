@@ -12,7 +12,6 @@ interface CompanyProjectsProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
@@ -31,7 +30,7 @@ export function CompanyProjects({ projects, leadId }: CompanyProjectsProps) {
   return (
     <div className="space-y-3 mt-4">
       {projects.map((project) => {
-        const status = statusConfig[project.status] || statusConfig.prospeccao;
+        const status = statusConfig[project.status] || statusConfig.qualificacao;
         const frascatiScore = [project.frascati_novidade, project.frascati_criatividade, project.frascati_incerteza, project.frascati_sistematicidade, project.frascati_transferibilidade].filter(Boolean).length;
         const frascatiBadge = frascatiScore < 3 ? "bg-red-100 text-red-700 border-red-200" : frascatiScore < 5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
 

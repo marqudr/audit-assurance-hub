@@ -10,7 +10,7 @@ interface CrmActionAlertsProps {
   inline?: boolean;
 }
 
-const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
+const ACTIVE_STATUSES = ["qualificacao", "diagnostico", "proposta", "fechamento"];
 
 export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAlertsProps) {
   const activeProjects = useMemo(
@@ -19,7 +19,7 @@ export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAler
   );
 
   const noContact = useMemo(
-    () => activeProjects.filter((p) => p.status === "prospeccao" && !p.last_contacted_date),
+    () => activeProjects.filter((p) => p.status === "qualificacao" && !p.last_contacted_date),
     [activeProjects]
   );
 
@@ -82,11 +82,10 @@ export function CrmActionAlerts({ projects, onCardClick, inline }: CrmActionAler
       />
 
       {/* Parados */}
-      <div className={`rounded-lg border p-3 flex flex-col gap-2 ${
-        stalled.length > 0
+      <div className={`rounded-lg border p-3 flex flex-col gap-2 ${stalled.length > 0
           ? "bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800"
           : "bg-muted/30 border-border opacity-60"
-      }`}>
+        }`}>
         <div className="flex items-center gap-2">
           <div className={`rounded-md p-1.5 ${stalled.length > 0 ? "bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400" : "bg-muted text-muted-foreground"}`}>
             <AlertTriangle className="h-5 w-5" />
@@ -177,13 +176,11 @@ function AlertCard({
   const isEmpty = count === 0;
 
   return (
-    <div className={`rounded-lg border p-3 flex flex-col gap-2 ${
-      isEmpty ? "bg-muted/30 border-border opacity-60" : `${bgClass} ${borderClass}`
-    }`}>
+    <div className={`rounded-lg border p-3 flex flex-col gap-2 ${isEmpty ? "bg-muted/30 border-border opacity-60" : `${bgClass} ${borderClass}`
+      }`}>
       <div className="flex items-center gap-2">
-        <div className={`rounded-md p-1.5 ${
-          isEmpty ? "bg-muted text-muted-foreground" : `${bgClass} ${iconColor}`
-        }`}>
+        <div className={`rounded-md p-1.5 ${isEmpty ? "bg-muted text-muted-foreground" : `${bgClass} ${iconColor}`
+          }`}>
           {icon}
         </div>
         <div className="flex-1">

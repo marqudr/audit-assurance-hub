@@ -7,7 +7,7 @@ import { ptBR } from "date-fns/locale";
 import { useProjects } from "@/hooks/useProjects";
 import { useTodayAppointments } from "@/hooks/useAppointments";
 
-const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
+const ACTIVE_STATUSES = ["qualificacao", "diagnostico", "proposta", "fechamento"];
 
 interface NotificationsSheetProps {
   open: boolean;
@@ -24,7 +24,7 @@ export function NotificationsSheet({ open, onOpenChange }: NotificationsSheetPro
   );
 
   const noContact = useMemo(
-    () => activeProjects.filter((p) => p.status === "prospeccao" && !p.last_contacted_date),
+    () => activeProjects.filter((p) => p.status === "qualificacao" && !p.last_contacted_date),
     [activeProjects]
   );
 

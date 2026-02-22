@@ -10,6 +10,8 @@ export interface ProjectAttachment {
   file_size: number | null;
   storage_path: string;
   phase: string | null;
+  custom_name?: string | null;
+  description?: string | null;
   created_at: string;
 }
 
@@ -29,7 +31,7 @@ export function useProjectAttachments(projectId: string | undefined) {
   });
 }
 
-const CRM_PHASES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento", "ganho", "perdido", "novo", "qualificado"];
+const CRM_PHASES = ["qualificacao", "diagnostico", "proposta", "fechamento", "ganho", "perdido", "novo", "qualificado"];
 
 export function useCompanyAttachments(leadId: string | undefined) {
   return useQuery({
@@ -72,10 +74,14 @@ export function useUploadAttachment() {
       projectId,
       file,
       phase,
+      customName,
+      description,
     }: {
       projectId: string;
       file: File;
       phase?: string;
+      customName?: string;
+      description?: string;
     }) => {
       const storagePath = `${user!.id}/${projectId}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
@@ -92,6 +98,8 @@ export function useUploadAttachment() {
           file_size: file.size,
           storage_path: storagePath,
           phase: phase as any,
+          custom_name: customName || null,
+          description: description || null,
         })
         .select()
         .single();

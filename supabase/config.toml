@@ -1,18 +1,19 @@
 project_id = "jcegxnlzocfypgxaipwq"
 
 [auth.email]
-[auth.email.invite]
+
+[auth.email.template.invite]
 subject = "Você foi convidado(a) para a InnovaSys"
 content_path = "./supabase/templates/invite.html"
 
-[auth.email.recovery]
+[auth.email.template.recovery]
 subject = "Redefinição de senha - InnovaSys"
 content_path = "./supabase/templates/recovery.html"
 
-[auth.email.confirmation]
+[auth.email.template.confirmation]
 subject = "Confirme seu e-mail - InnovaSys"
 content_path = "./supabase/templates/confirmation.html"
 
-[auth.email.magic_link]
+[auth.email.template.magic_link]
 subject = "Seu link de acesso - InnovaSys"
 content_path = "./supabase/templates/magic_link.html"

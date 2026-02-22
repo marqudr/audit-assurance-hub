@@ -12,14 +12,12 @@ export interface ChecklistItem {
   created_at: string;
 }
 
-export const PHASE_CHECKLIST: Record<string, { key: string; label: string }[]> = {
-  prospeccao: [
-    { key: "contato_decisor", label: "Contato decisor identificado" },
-    { key: "cnpj_validado", label: "CNPJ validado" },
-    { key: "setor_confirmado", label: "Setor confirmado" },
-    { key: "icp_score_ok", label: "ICP Score ≥ 7,5 (Elegibilidade confirmada)" },
-  ],
+export const PHASE_CHECKLIST: Record<string, { key: string; label: string; locked?: boolean }[]> = {
   qualificacao: [
+    { key: "contato_decisor", label: "Contato decisor identificado", locked: true },
+    { key: "cnpj_validado", label: "CNPJ validado", locked: true },
+    { key: "setor_confirmado", label: "Setor confirmado", locked: true },
+    { key: "icp_score_ok", label: "ICP Score ≥ 7,5 (Elegibilidade confirmada)", locked: true },
     { key: "regime_tributario", label: "Regime tributário definido" },
     { key: "faixa_receita", label: "Faixa de receita preenchida" },
     { key: "reuniao_qualificacao", label: "Reunião de qualificação realizada" },
@@ -106,7 +104,7 @@ export function getPhaseCompletionCount(
 ): { completed: number; total: number } {
   const items = PHASE_CHECKLIST[phase] || [];
   const completedItems = items.filter((item) =>
-    checklist.some((c) => c.phase === phase && c.item_key === item.key && c.completed)
+    item.locked || checklist.some((c) => c.phase === phase && c.item_key === item.key && c.completed)
   );
   return { completed: completedItems.length, total: items.length };
 }
@@ -119,6 +117,6 @@ export function isPhaseComplete(checklist: ChecklistItem[], phase: string): bool
 export function getPendingItems(checklist: ChecklistItem[], phase: string): string[] {
   const items = PHASE_CHECKLIST[phase] || [];
   return items
-    .filter((item) => !checklist.some((c) => c.phase === phase && c.item_key === item.key && c.completed))
+    .filter((item) => !item.locked && !checklist.some((c) => c.phase === phase && c.item_key === item.key && c.completed))
     .map((item) => item.label);
 }

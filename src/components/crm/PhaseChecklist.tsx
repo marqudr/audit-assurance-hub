@@ -20,7 +20,7 @@ export function PhaseChecklist({ leadId, phase }: PhaseChecklistProps) {
       <h4 className="text-sm font-semibold">Checklist da Fase</h4>
       <div className="space-y-2">
         {items.map((item) => {
-          const isChecked = checklist.some(
+          const isChecked = item.locked || checklist.some(
             (c) => c.phase === phase && c.item_key === item.key && c.completed
           );
           return (
@@ -28,7 +28,7 @@ export function PhaseChecklist({ leadId, phase }: PhaseChecklistProps) {
               <Checkbox
                 id={`${leadId}-${item.key}`}
                 checked={isChecked}
-                disabled={toggleItem.isPending}
+                disabled={item.locked || toggleItem.isPending}
                 onCheckedChange={(checked) => {
                   toggleItem.mutate({
                     leadId,

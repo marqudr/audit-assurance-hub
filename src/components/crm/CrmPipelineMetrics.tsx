@@ -10,7 +10,7 @@ interface CrmPipelineMetricsProps {
 }
 
 const ACTIVE_PHASES = [
-  { key: "prospeccao", label: "Prospecção", color: "#3b82f6" },
+  { key: "qualificacao", label: "Qualificação", color: "#eab308" },
   { key: "qualificacao", label: "Qualificação", color: "#eab308" },
   { key: "diagnostico", label: "Diagnóstico", color: "#f97316" },
   { key: "proposta", label: "Proposta", color: "#a855f7" },

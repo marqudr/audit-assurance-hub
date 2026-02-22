@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -11,16 +12,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building2, Search } from "lucide-react";
+import { Building2, Search, Plus } from "lucide-react";
 import { useLeads } from "@/hooks/useLeads";
 import { useProjects } from "@/hooks/useProjects";
 import { maskCnpj } from "@/lib/utils";
+import { NewLeadModal } from "@/components/crm/NewLeadModal";
 
 const Companies = () => {
   const navigate = useNavigate();
   const { data: leads = [], isLoading: leadsLoading } = useLeads();
   const { data: projects = [] } = useProjects();
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const companiesWithMetrics = useMemo(() =>
     leads.map((lead) => {
@@ -68,6 +71,9 @@ const Companies = () => {
             className="pl-9"
           />
         </div>
+        <Button onClick={() => setModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Nova Empresa
+        </Button>
       </div>
 
       <Card>
@@ -128,6 +134,8 @@ const Companies = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <NewLeadModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   );
 };

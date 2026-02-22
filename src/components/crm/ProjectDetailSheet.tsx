@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Pencil, X, Check, CalendarIcon, Clock, Ghost, Target, TrendingUp, Megaphone, Loader2, Building2, ClipboardList, FlaskConical } from "lucide-react";
-import { TaxSimulator } from "./TaxSimulator";
+
 import { PhaseChecklist } from "./PhaseChecklist";
 import { ProjectAttachments } from "./ProjectAttachments";
 import { formatBRL, parseBRL } from "./NewLeadModal";
@@ -36,7 +36,6 @@ interface ProjectDetailSheetProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
@@ -48,7 +47,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany }: ProjectDetailSheetProps) {
   const updateProject = useUpdateProject();
   const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState<Record<string, any>>({});
+  const [editData, setEditData] = useState<Partial<Project>>({});
 
   useEffect(() => {
     if (project && editing) {
@@ -65,21 +64,27 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         context: project.context || "",
         objection: project.objection || "",
         next_action: project.next_action || "",
-        next_action_date: project.next_action_date ? new Date(project.next_action_date) : undefined,
+        next_action_date: project.next_action_date ? project.next_action_date : undefined,
         content_consumed: project.content_consumed || "",
-        last_contacted_date: project.last_contacted_date ? new Date(project.last_contacted_date) : undefined,
+        last_contacted_date: project.last_contacted_date ? project.last_contacted_date : undefined,
         last_activity_type: project.last_activity_type || "",
-        next_activity_date: project.next_activity_date ? new Date(project.next_activity_date) : undefined,
+        next_activity_date: project.next_activity_date ? project.next_activity_date : undefined,
         estimated_ltv: project.estimated_ltv ? formatBRL(String(Math.round(project.estimated_ltv * 100))) : "",
         probability: project.probability ?? 50,
         deal_value: project.deal_value ? formatBRL(String(Math.round(project.deal_value * 100))) : "",
-        expected_close_date: project.expected_close_date ? new Date(project.expected_close_date) : undefined,
+        expected_close_date: project.expected_close_date ? project.expected_close_date : undefined,
         // Frascati fields
         frascati_novidade: project.frascati_novidade ?? false,
         frascati_criatividade: project.frascati_criatividade ?? false,
         frascati_incerteza: project.frascati_incerteza ?? false,
         frascati_sistematicidade: project.frascati_sistematicidade ?? false,
         frascati_transferibilidade: project.frascati_transferibilidade ?? false,
+        classification: project.classification || "",
+        objective: project.objective || "",
+        innovation: project.innovation || "",
+        technical_challenges: project.technical_challenges || "",
+        tech_lead: project.tech_lead || "",
+        base_year: project.base_year ? String(project.base_year) : "",
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,12 +92,12 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
 
   if (!project) return null;
 
-  const status = statusConfig[project.status] || statusConfig.prospeccao;
+  const status = statusConfig[project.status] || statusConfig.qualificacao;
   const timeInStage = differenceInDays(new Date(), new Date(project.updated_at));
   const tisColor = timeInStage > 14 ? "text-red-600" : timeInStage > 7 ? "text-yellow-600" : "text-green-600";
-  
 
-  const ed = (field: string, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
+
+  const ed = (field: keyof Project, value: any) => setEditData((prev) => ({ ...prev, [field]: value }));
 
   const frascatiScore = [project.frascati_novidade, project.frascati_criatividade, project.frascati_incerteza, project.frascati_sistematicidade, project.frascati_transferibilidade].filter(Boolean).length;
   const frascatiBadgeClass = frascatiScore < 3 ? "bg-red-100 text-red-700 border-red-200" : frascatiScore < 5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-green-100 text-green-700 border-green-200";
@@ -110,28 +115,34 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         source_medium: editData.source_medium || null,
         first_touch_channel: editData.first_touch_channel || null,
         last_touch_channel: editData.last_touch_channel || null,
-        estimated_cac: editData.estimated_cac ? parseBRL(editData.estimated_cac) : null,
+        estimated_cac: editData.estimated_cac ? parseBRL(String(editData.estimated_cac)) : null,
         icp_score: editData.icp_score,
         pain_points: editData.pain_points || null,
         context: editData.context || null,
         objection: editData.objection || null,
         next_action: editData.next_action || null,
-        next_action_date: editData.next_action_date ? editData.next_action_date.toISOString() : null,
+        next_action_date: editData.next_action_date ? new Date(editData.next_action_date).toISOString() : null,
         content_consumed: editData.content_consumed || null,
-        last_contacted_date: editData.last_contacted_date ? editData.last_contacted_date.toISOString() : null,
+        last_contacted_date: editData.last_contacted_date ? new Date(editData.last_contacted_date).toISOString() : null,
         last_activity_type: editData.last_activity_type || null,
-        next_activity_date: editData.next_activity_date ? editData.next_activity_date.toISOString() : null,
-        estimated_ltv: editData.estimated_ltv ? parseBRL(editData.estimated_ltv) : null,
+        next_activity_date: editData.next_activity_date ? new Date(editData.next_activity_date).toISOString() : null,
+        estimated_ltv: editData.estimated_ltv ? parseBRL(String(editData.estimated_ltv)) : null,
         probability: editData.probability,
-        deal_value: editData.deal_value ? parseBRL(editData.deal_value) : null,
-        expected_close_date: editData.expected_close_date ? format(editData.expected_close_date, "yyyy-MM-dd") : null,
+        deal_value: editData.deal_value ? parseBRL(String(editData.deal_value)) : null,
+        expected_close_date: editData.expected_close_date ? format(new Date(editData.expected_close_date), "yyyy-MM-dd") : null,
         // Frascati
         frascati_novidade: editData.frascati_novidade,
         frascati_criatividade: editData.frascati_criatividade,
         frascati_incerteza: editData.frascati_incerteza,
         frascati_sistematicidade: editData.frascati_sistematicidade,
         frascati_transferibilidade: editData.frascati_transferibilidade,
-      } as any);
+        classification: editData.classification || null,
+        objective: editData.objective || null,
+        innovation: editData.innovation || null,
+        technical_challenges: editData.technical_challenges || null,
+        tech_lead: editData.tech_lead || null,
+        base_year: editData.base_year ? parseInt(String(editData.base_year), 10) : null,
+      });
       toast.success("Projeto atualizado com sucesso!");
       setEditing(false);
     } catch {
@@ -139,11 +150,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
     }
   };
 
-  // Build a lead-like object for TaxSimulator compatibility
-  const taxSimLead = {
-    ...project,
-    company_name: project.company_name || project.name,
-  } as any;
+
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) setEditing(false); onOpenChange(v); }}>
@@ -205,39 +212,30 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
             </div>
           )}
 
-          {/* Detalhe do Projeto */}
-          <Separator />
-          <div className="space-y-3">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" /> Detalhe do Projeto
-            </h4>
-            {!editing ? (
-              <div className="rounded-md border p-4 bg-muted/30">
-                <p className="text-sm whitespace-pre-wrap">
-                  {project.description || <span className="text-muted-foreground italic">Nenhuma descrição adicionada. Clique em "Editar" para detalhar o projeto.</span>}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label>Descrição do Projeto</Label>
-                <Textarea
-                  value={editData.description}
-                  onChange={(e) => ed("description", e.target.value)}
-                  rows={6}
-                  placeholder="Descreva o projeto que está sendo vendido: escopo, objetivos, entregáveis, diferenciais..."
-                />
-              </div>
-            )}
-          </div>
 
-          {/* Tax Simulator */}
-          <Separator />
-          <TaxSimulator lead={taxSimLead} hideProposalButton={project.status === "qualificacao"} />
+
 
           {/* Enrichment / Qualification */}
           <Separator />
           {!editing ? (
-            <Accordion type="multiple" defaultValue={["attribution", "qualification", "revenue"]} className="w-full">
+            <Accordion type="multiple" defaultValue={["innovation_tech", "attribution", "qualification", "revenue"]} className="w-full">
+              <AccordionItem value="innovation_tech">
+                <AccordionTrigger className="text-sm">
+                  <span className="flex items-center gap-2"><FlaskConical className="h-4 w-4" /> Detalhes Técnicos (Lei do Bem)</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><span className="text-muted-foreground">Classificação</span><p className="font-medium">{project.classification || "—"}</p></div>
+                      <div><span className="text-muted-foreground">Ano Base</span><p className="font-medium">{project.base_year || "—"}</p></div>
+                      <div className="col-span-2"><span className="text-muted-foreground">Líder Técnico</span><p className="font-medium">{project.tech_lead || "—"}</p></div>
+                    </div>
+                    <div><span className="text-muted-foreground">Objetivo</span><p className="font-medium text-sm mt-1 whitespace-pre-wrap">{project.objective || "—"}</p></div>
+                    <div><span className="text-muted-foreground">Inovação e Saltos Tecnológicos</span><p className="font-medium text-sm mt-1 whitespace-pre-wrap">{project.innovation || "—"}</p></div>
+                    <div><span className="text-muted-foreground">Desafios Técnicos</span><p className="font-medium text-sm mt-1 whitespace-pre-wrap">{project.technical_challenges || "—"}</p></div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="attribution">
                 <AccordionTrigger className="text-sm">
                   <span className="flex items-center gap-2"><Megaphone className="h-4 w-4" /> Atribuição e Origem</span>
@@ -261,8 +259,8 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                       <span className="text-muted-foreground">ICP Score (Empresa)</span>
                       <Badge variant="outline" className={cn(
                         project.icp_score != null && project.icp_score < 5 ? "bg-red-100 text-red-700 border-red-200" :
-                        project.icp_score != null && project.icp_score < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-                        project.icp_score != null ? "bg-green-100 text-green-700 border-green-200" : ""
+                          project.icp_score != null && project.icp_score < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
+                            project.icp_score != null ? "bg-green-100 text-green-700 border-green-200" : ""
                       )}>{project.icp_score ?? "—"}/10</Badge>
                     </div>
                     {/* Frascati Section */}
@@ -329,7 +327,42 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
               </AccordionItem>
             </Accordion>
           ) : (
-            <Accordion type="multiple" defaultValue={["attribution", "qualification", "revenue"]} className="w-full">
+            <Accordion type="multiple" defaultValue={["innovation_tech", "attribution", "qualification", "revenue"]} className="w-full">
+              <AccordionItem value="innovation_tech">
+                <AccordionTrigger className="text-sm">
+                  <span className="flex items-center gap-2"><FlaskConical className="h-4 w-4" /> Detalhes Técnicos (Lei do Bem)</span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Classificação</Label>
+                        <Select value={editData.classification} onValueChange={(v) => ed("classification", v)}>
+                          <SelectTrigger className="text-xs"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pesquisa Básica (PB)">Pesquisa Básica (PB)</SelectItem>
+                            <SelectItem value="Pesquisa Aplicada (PA)">Pesquisa Aplicada (PA)</SelectItem>
+                            <SelectItem value="Desenvolvimento Experimental (DE)">Desenvolvimento Experimental (DE)</SelectItem>
+                            <SelectItem value="Tecnologia Industrial Básica (TIB)">Tecnologia Industrial Básica (TIB)</SelectItem>
+                            <SelectItem value="Serviço de Apoio Técnico (SAT)">Serviço de Apoio Técnico (SAT)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Ano Base</Label>
+                        <Input value={editData.base_year} onChange={(e) => ed("base_year", e.target.value.replace(/\D/g, ""))} placeholder="Ex: 2024" />
+                      </div>
+                      <div className="col-span-2 space-y-1">
+                        <Label className="text-xs">Líder Técnico</Label>
+                        <Input value={editData.tech_lead} onChange={(e) => ed("tech_lead", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="space-y-1"><Label className="text-xs">Objetivo</Label><Textarea value={editData.objective} onChange={(e) => ed("objective", e.target.value)} rows={3} /></div>
+                    <div className="space-y-1"><Label className="text-xs">Inovação e Saltos Tecnológicos</Label><Textarea value={editData.innovation} onChange={(e) => ed("innovation", e.target.value)} rows={3} /></div>
+                    <div className="space-y-1"><Label className="text-xs">Desafios Técnicos</Label><Textarea value={editData.technical_challenges} onChange={(e) => ed("technical_challenges", e.target.value)} rows={3} /></div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
               <AccordionItem value="attribution">
                 <AccordionTrigger className="text-sm">
                   <span className="flex items-center gap-2"><Megaphone className="h-4 w-4" /> Atribuição e Origem</span>
@@ -395,8 +428,8 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                 <AccordionContent>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1"><Label className="text-xs">LTV Estimado</Label><Input value={editData.estimated_ltv} onChange={(e) => ed("estimated_ltv", formatBRL(e.target.value))} /></div>
-                      <div className="space-y-1"><Label className="text-xs">Valor do Negócio</Label><Input value={editData.deal_value} onChange={(e) => ed("deal_value", formatBRL(e.target.value))} /></div>
+                      <div className="space-y-1"><Label className="text-xs">LTV Estimado</Label><Input value={String(editData.estimated_ltv || "")} onChange={(e) => ed("estimated_ltv", formatBRL(e.target.value))} /></div>
+                      <div className="space-y-1"><Label className="text-xs">Valor do Negócio</Label><Input value={String(editData.deal_value || "")} onChange={(e) => ed("deal_value", formatBRL(e.target.value))} /></div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs">Probabilidade: {editData.probability}%</Label>
@@ -408,10 +441,10 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                         <PopoverTrigger asChild>
                           <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.expected_close_date && "text-muted-foreground")}>
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {editData.expected_close_date ? format(editData.expected_close_date, "dd/MM/yyyy") : "Selecione"}
+                            {editData.expected_close_date ? format(new Date(editData.expected_close_date), "dd/MM/yyyy") : "Selecione"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.expected_close_date} onSelect={(d) => ed("expected_close_date", d)} locale={ptBR} /></PopoverContent>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.expected_close_date ? new Date(editData.expected_close_date) : undefined} onSelect={(d) => ed("expected_close_date", d ? d.toISOString() : undefined)} locale={ptBR} /></PopoverContent>
                       </Popover>
                     </div>
                   </div>
@@ -484,10 +517,10 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.next_action_date && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editData.next_action_date ? format(editData.next_action_date, "dd/MM/yyyy") : "Selecione"}
+                      {editData.next_action_date ? format(new Date(editData.next_action_date), "dd/MM/yyyy") : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date} onSelect={(d) => ed("next_action_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_action_date ? new Date(editData.next_action_date) : undefined} onSelect={(d) => ed("next_action_date", d ? d.toISOString() : undefined)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
                 </Popover>
               </div>
               <Separator />
@@ -498,10 +531,10 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.last_contacted_date && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editData.last_contacted_date ? format(editData.last_contacted_date, "dd/MM/yyyy") : "Selecione"}
+                      {editData.last_contacted_date ? format(new Date(editData.last_contacted_date), "dd/MM/yyyy") : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.last_contacted_date} onSelect={(d) => ed("last_contacted_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.last_contacted_date ? new Date(editData.last_contacted_date) : undefined} onSelect={(d) => ed("last_contacted_date", d ? d.toISOString() : undefined)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
                 </Popover>
               </div>
               <div className="space-y-1">
@@ -521,10 +554,10 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !editData.next_activity_date && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editData.next_activity_date ? format(editData.next_activity_date, "dd/MM/yyyy") : "Selecione"}
+                      {editData.next_activity_date ? format(new Date(editData.next_activity_date), "dd/MM/yyyy") : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_activity_date} onSelect={(d) => ed("next_activity_date", d)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
+                  <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={editData.next_activity_date ? new Date(editData.next_activity_date) : undefined} onSelect={(d) => ed("next_activity_date", d ? d.toISOString() : undefined)} locale={ptBR} className="pointer-events-auto" /></PopoverContent>
                 </Popover>
               </div>
               <Separator />

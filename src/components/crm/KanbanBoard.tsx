@@ -2,13 +2,13 @@ import { useMemo } from "react";
 import { KanbanColumn } from "./KanbanColumn";
 import { useLeadChecklist, isPhaseComplete, getPendingItems } from "@/hooks/useLeadChecklist";
 import { useUpdateProject, type Project } from "@/hooks/useProjects";
+import type { LeadStatus } from "@/hooks/useLeads";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { ChecklistItem } from "@/hooks/useLeadChecklist";
 
-const PIPELINE_PHASES: { phase: string; label: string; color: string }[] = [
-  { phase: "prospeccao", label: "Prospecção", color: "bg-blue-500" },
+const PIPELINE_PHASES: { phase: LeadStatus; label: string; color: string }[] = [
   { phase: "qualificacao", label: "Qualificação", color: "bg-yellow-500" },
   { phase: "diagnostico", label: "Diagnóstico", color: "bg-orange-500" },
   { phase: "proposta", label: "Proposta", color: "bg-purple-500" },
@@ -68,7 +68,7 @@ export function KanbanBoard({ projects, onCardClick }: KanbanBoardProps) {
     if (!project || project.status === targetPhase) return;
 
     const currentIndex = PHASE_ORDER.indexOf(project.status);
-    const targetIndex = PHASE_ORDER.indexOf(targetPhase);
+    const targetIndex = PHASE_ORDER.indexOf(targetPhase as LeadStatus);
 
     // Prevent moving back from "ganho"
     if (project.status === "ganho") {

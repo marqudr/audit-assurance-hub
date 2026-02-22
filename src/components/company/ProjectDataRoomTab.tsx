@@ -10,7 +10,7 @@ import { usePhaseOutputs } from "@/hooks/usePhaseOutputs";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 
-const CRM_PHASES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento", "ganho", "perdido", "novo", "qualificado"];
+const CRM_PHASES = ["qualificacao", "diagnostico", "proposta", "fechamento", "ganho", "perdido", "novo", "qualificado"];
 
 function formatFileSize(bytes: number | null) {
   if (!bytes) return "—";

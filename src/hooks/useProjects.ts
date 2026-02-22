@@ -23,6 +23,12 @@ export interface Project {
   frascati_incerteza: boolean;
   frascati_sistematicidade: boolean;
   frascati_transferibilidade: boolean;
+  classification: string | null;
+  objective: string | null;
+  innovation: string | null;
+  technical_challenges: string | null;
+  tech_lead: string | null;
+  base_year: number | null;
   pain_points: string | null;
   context: string | null;
   objection: string | null;
@@ -63,7 +69,7 @@ export function useProjects(leadId?: string) {
         company_name: p.leads?.company_name,
         cnpj: p.leads?.cnpj,
         leads: undefined,
-      })) as Project[];
+      })) as unknown as Project[];
     },
     enabled: !!user,
   });
@@ -85,7 +91,7 @@ export function useProject(projectId: string | undefined) {
         company_name: (data as any).leads?.company_name,
         cnpj: (data as any).leads?.cnpj,
         leads: undefined,
-      } as Project;
+      } as unknown as Project;
     },
     enabled: !!projectId,
   });
@@ -102,6 +108,12 @@ export function useCreateProject() {
       description?: string;
       deal_value?: number;
       status?: LeadStatus;
+      classification?: string;
+      objective?: string;
+      innovation?: string;
+      technical_challenges?: string;
+      tech_lead?: string;
+      base_year?: number;
     }) => {
       const { data, error } = await supabase
         .from("projects")

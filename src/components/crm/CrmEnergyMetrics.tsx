@@ -10,10 +10,10 @@ interface CrmEnergyMetricsProps {
   onCardClick: (project: Project) => void;
 }
 
-const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
-const FUNNEL_ORDER = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
+const ACTIVE_STATUSES = ["qualificacao", "diagnostico", "proposta", "fechamento"];
+const FUNNEL_ORDER = ["qualificacao", "diagnostico", "proposta", "fechamento"];
+
 const FUNNEL_LABELS: Record<string, string> = {
-  prospeccao: "Prospecção",
   qualificacao: "Qualificação",
   diagnostico: "Diagnóstico",
   proposta: "Proposta",

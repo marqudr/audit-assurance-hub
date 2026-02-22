@@ -12,7 +12,6 @@ interface CompanyDataRoomProps {
 }
 
 const statusLabels: Record<string, string> = {
-  prospeccao: "Prospecção",
   qualificacao: "Qualificação",
   diagnostico: "Diagnóstico",
   proposta: "Proposta",

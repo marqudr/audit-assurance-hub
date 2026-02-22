@@ -16,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Users, DollarSign, TrendingUp, Plus, Eye, LayoutGrid, TableIcon, ClipboardList } from "lucide-react";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 import { useProjects, type Project } from "@/hooks/useProjects";
-import { NewLeadModal } from "@/components/crm/NewLeadModal";
+import { NewProjectModal } from "@/components/crm/NewProjectModal";
 import { LeadDetailSheet } from "@/components/crm/LeadDetailSheet";
 import { ProjectDetailSheet } from "@/components/crm/ProjectDetailSheet";
 import { KanbanBoard } from "@/components/crm/KanbanBoard";
@@ -27,7 +27,6 @@ import { CrmRecentActivity } from "@/components/crm/CrmRecentActivity";
 import { differenceInDays } from "date-fns";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
@@ -46,7 +45,7 @@ function formatDate(dateStr: string) {
   });
 }
 
-const ACTIVE_STATUSES = ["prospeccao", "qualificacao", "diagnostico", "proposta", "fechamento"];
+const ACTIVE_STATUSES = ["qualificacao", "diagnostico", "proposta", "fechamento"];
 
 const CRM = () => {
   const navigate = useNavigate();
@@ -68,7 +67,7 @@ const CRM = () => {
 
   const alertCount = useMemo(() => {
     const active = projects.filter((p) => ACTIVE_STATUSES.includes(p.status));
-    const noContact = active.filter((p) => p.status === "prospeccao" && !p.last_contacted_date).length;
+    const noContact = active.filter((p) => p.status === "qualificacao" && !p.last_contacted_date).length;
     const now = new Date();
     const overdue = active.filter((p) => {
       const d1 = p.next_activity_date ? new Date(p.next_activity_date) : null;
@@ -124,7 +123,7 @@ const CRM = () => {
             )}
           </Button>
           <Button onClick={() => setModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Nova Empresa
+            <Plus className="mr-2 h-4 w-4" /> Novo Projeto
           </Button>
         </div>
       </div>
@@ -230,7 +229,7 @@ const CRM = () => {
                     </TableRow>
                   ) : (
                     projects.map((project) => {
-                      const status = statusConfig[project.status] || statusConfig.prospeccao;
+                      const status = statusConfig[project.status] || statusConfig.qualificacao;
                       return (
                         <TableRow
                           key={project.id}
@@ -316,7 +315,7 @@ const CRM = () => {
         </SheetContent>
       </Sheet>
 
-      <NewLeadModal open={modalOpen} onOpenChange={setModalOpen} />
+      <NewProjectModal open={modalOpen} onOpenChange={setModalOpen} />
       <ProjectDetailSheet
         project={selectedProject}
         open={projectSheetOpen}

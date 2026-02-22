@@ -1,7 +1,11 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, Download, Trash2, Loader2 } from "lucide-react";
+import { Upload, FileText, Download, Trash2, Loader2, Plus } from "lucide-react";
 import { useProjectAttachments, useUploadAttachment, useDeleteAttachment } from "@/hooks/useProjectAttachments";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -28,19 +32,46 @@ export function DataRoomPanel({ projectId, phaseNumber }: DataRoomPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState("outro");
 
-  // Show all files — filtering by phase is optional for data room
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [customName, setCustomName] = useState("");
+  const [description, setDescription] = useState("");
+
+  const resetUpload = () => {
+    setUploadFile(null);
+    setCustomName("");
+    setDescription("");
+    setIsUploadOpen(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const files = attachments || [];
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setUploadFile(file);
+      if (!customName) {
+        setCustomName(file.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!uploadFile) return;
     try {
-      await uploadMutation.mutateAsync({ projectId, file, phase: undefined });
+      await uploadMutation.mutateAsync({
+        projectId,
+        file: uploadFile,
+        phase: undefined,
+        customName: customName || undefined,
+        description: description || undefined
+      });
       toast({ title: "Arquivo enviado com sucesso" });
+      resetUpload();
     } catch (err: any) {
       toast({ title: "Erro ao enviar", description: err.message, variant: "destructive" });
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleDownload = async (storagePath: string, fileName: string) => {
@@ -75,23 +106,52 @@ export function DataRoomPanel({ projectId, phaseNumber }: DataRoomPanelProps) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-3 border-b">
         <h3 className="text-sm font-semibold">Data Room</h3>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-7 text-xs"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadMutation.isPending}
-        >
-          {uploadMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Upload className="h-3 w-3 mr-1" />}
-          Upload
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          accept=".pdf,.xml,.xlsx,.xls,.csv,.doc,.docx,.txt"
-          onChange={handleUpload}
-        />
+
+        <Dialog open={isUploadOpen} onOpenChange={(open) => { if (!open) resetUpload(); setIsUploadOpen(open); }}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" className="h-7 text-xs">
+              <Upload className="h-3 w-3 mr-1" />
+              Upload
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Novo Arquivo</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Selecionar Arquivo</Label>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+                    <Plus className="h-4 w-4 mr-1" /> Procurar...
+                  </Button>
+                  <span className="text-sm text-muted-foreground truncate flex-1">
+                    {uploadFile ? uploadFile.name : "Nenhum arquivo"}
+                  </span>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.xml,.xlsx,.xls,.csv,.doc,.docx,.txt"
+                  onChange={handleFileChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nome do Documento</Label>
+                <Input value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="Ex: Contrato Assinado" />
+              </div>
+              <div className="space-y-2">
+                <Label>Anotações (Opcional)</Label>
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Descreva o conteúdo do arquivo..." />
+              </div>
+              <Button className="w-full mt-2" onClick={handleUploadSubmit} disabled={!uploadFile || uploadMutation.isPending}>
+                {uploadMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                Enviar Arquivo
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -111,8 +171,15 @@ export function DataRoomPanel({ projectId, phaseNumber }: DataRoomPanelProps) {
           <div key={f.id} className="flex items-center gap-2 p-2 rounded-md border bg-card hover:bg-accent/50 transition-colors group">
             <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate">{f.file_name}</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs font-medium truncate" title={f.file_name}>
+                {f.custom_name || f.file_name}
+              </p>
+              {f.description && (
+                <p className="text-[10px] text-muted-foreground truncate" title={f.description}>
+                  {f.description}
+                </p>
+              )}
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 {formatSize(f.file_size)} · {format(new Date(f.created_at), "dd/MM/yy")}
               </p>
             </div>

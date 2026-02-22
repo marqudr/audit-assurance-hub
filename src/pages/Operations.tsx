@@ -37,7 +37,7 @@ function useOperationsProjects() {
       // Include won projects + projects that have phases even if status changed
       const projectIds = new Set<string>();
       const result: any[] = [];
-      
+
       for (const p of wonProjects || []) {
         projectIds.add(p.id);
         result.push({

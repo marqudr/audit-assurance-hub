@@ -35,7 +35,6 @@ interface LeadDetailSheetProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
@@ -120,7 +119,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   const address = formatAddress(lead);
   const timeInStage = differenceInDays(new Date(), new Date(lead.updated_at));
   const tisColor = timeInStage > 14 ? "text-red-600" : timeInStage > 7 ? "text-yellow-600" : "text-green-600";
-  
+
 
   // Auto-calculated ICP Score based on eligibility
   const calcIcpScore = (data: Record<string, any>) => {
@@ -138,7 +137,7 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
   });
   const icpBadgeClass = currentIcpScore < 5 ? "bg-red-100 text-red-700 border-red-200" :
     currentIcpScore < 7.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200" :
-    "bg-green-100 text-green-700 border-green-200";
+      "bg-green-100 text-green-700 border-green-200";
 
   const handleAddContact = async () => {
     if (!newName.trim()) { toast.error("Informe o nome do contato."); return; }
@@ -448,7 +447,6 @@ export function LeadDetailSheet({ lead, open, onOpenChange }: LeadDetailSheetPro
                   <Select value={editData.status} onValueChange={(v) => ed("status", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="prospeccao">Prospecção</SelectItem>
                       <SelectItem value="qualificacao">Qualificação</SelectItem>
                       <SelectItem value="diagnostico">Diagnóstico</SelectItem>
                       <SelectItem value="proposta">Proposta</SelectItem>

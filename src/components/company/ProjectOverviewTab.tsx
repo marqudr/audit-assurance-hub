@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import type { Project } from "@/hooks/useProjects";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  prospeccao: { label: "Prospecção", className: "bg-blue-100 text-blue-800 border-blue-200" },
   qualificacao: { label: "Qualificação", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
   diagnostico: { label: "Diagnóstico", className: "bg-orange-100 text-orange-800 border-orange-200" },
   proposta: { label: "Proposta", className: "bg-purple-100 text-purple-800 border-purple-200" },
@@ -23,7 +22,7 @@ const frascatiItems = [
 ];
 
 export function ProjectOverviewTab({ project }: { project: Project }) {
-  const status = statusConfig[project.status] || statusConfig.prospeccao;
+  const status = statusConfig[project.status] || statusConfig.qualificacao;
   const frascatiScore = frascatiItems.filter((f) => project[f.key]).length;
 
   return (

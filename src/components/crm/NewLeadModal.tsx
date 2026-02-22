@@ -171,7 +171,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
       await createProject.mutateAsync({
         lead_id: lead.id,
         name: `Projeto — ${companyName}`,
-        status: "prospeccao",
+        status: "qualificacao",
       });
 
       toast.success("Empresa cadastrada com sucesso!");
@@ -322,7 +322,7 @@ export function NewLeadModal({ open, onOpenChange }: NewLeadModalProps) {
         <DialogFooter>
           <Button variant="outline" onClick={() => { resetForm(); onOpenChange(false); }}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={createLead.isPending}>
-            {createLead.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : "Criar Lead"}
+            {createLead.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : "Criar Empresa"}
           </Button>
         </DialogFooter>
       </DialogContent>
