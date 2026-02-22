@@ -32,6 +32,7 @@ interface ProjectWorkflowTabProps {
 }
 
 export function ProjectWorkflowTab({ projectId }: ProjectWorkflowTabProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { hasRole: isAdmin } = useIsAdmin();
   const { data: project, isLoading: loadingProject } = useProject(projectId);
