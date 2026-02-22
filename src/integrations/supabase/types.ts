@@ -605,6 +605,8 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string
+          custom_name: string | null
+          description: string | null
           file_name: string
           file_size: number | null
           id: string
@@ -617,6 +619,8 @@ export type Database = {
         Insert: {
           category?: string | null
           created_at?: string
+          custom_name?: string | null
+          description?: string | null
           file_name: string
           file_size?: number | null
           id?: string
@@ -629,6 +633,8 @@ export type Database = {
         Update: {
           category?: string | null
           created_at?: string
+          custom_name?: string | null
+          description?: string | null
           file_name?: string
           file_size?: number | null
           id?: string
@@ -641,6 +647,104 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_attachments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_collaborator_hours: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          hours: number
+          id: string
+          month: number
+          project_id: string
+          year: number
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          hours: number
+          id?: string
+          month: number
+          project_id: string
+          year: number
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          hours?: number
+          id?: string
+          month?: number
+          project_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborator_hours_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "project_collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_collaborator_hours_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_collaborators: {
+        Row: {
+          cpf: string
+          created_at: string
+          education: string | null
+          id: string
+          monthly_charges: number
+          monthly_salary: number
+          name: string
+          project_id: string
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          cpf: string
+          created_at?: string
+          education?: string | null
+          id?: string
+          monthly_charges?: number
+          monthly_salary?: number
+          name: string
+          project_id: string
+          role: string
+          user_id?: string | null
+        }
+        Update: {
+          cpf?: string
+          created_at?: string
+          education?: string | null
+          id?: string
+          monthly_charges?: number
+          monthly_salary?: number
+          name?: string
+          project_id?: string
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborators_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -702,8 +806,63 @@ export type Database = {
           },
         ]
       }
+      project_tax_benefits: {
+        Row: {
+          created_at: string
+          csll_rate: number
+          depreciation: number
+          equipments: number
+          ipi_rate: number
+          ipi_reduction: number
+          irpj_rate: number
+          materials: number
+          project_id: string
+          salaries: number
+          services: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          csll_rate?: number
+          depreciation?: number
+          equipments?: number
+          ipi_rate?: number
+          ipi_reduction?: number
+          irpj_rate?: number
+          materials?: number
+          project_id: string
+          salaries?: number
+          services?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          csll_rate?: number
+          depreciation?: number
+          equipments?: number
+          ipi_rate?: number
+          ipi_reduction?: number
+          irpj_rate?: number
+          materials?: number
+          project_id?: string
+          salaries?: number
+          services?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tax_benefits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
+          base_year: number | null
+          classification: string | null
           content_consumed: string | null
           context: string | null
           created_at: string
@@ -727,6 +886,7 @@ export type Database = {
           has_timeline: boolean
           icp_score: number | null
           id: string
+          innovation: string | null
           last_activity_type: string | null
           last_contacted_date: string | null
           last_touch_channel: string | null
@@ -736,16 +896,21 @@ export type Database = {
           next_action_date: string | null
           next_activity_date: string | null
           objection: string | null
+          objective: string | null
           pain_points: string | null
           probability: number | null
           qualification_method: string | null
           rd_annual_budget: number | null
           source_medium: string | null
           status: Database["public"]["Enums"]["lead_status"]
+          tech_lead: string | null
+          technical_challenges: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          base_year?: number | null
+          classification?: string | null
           content_consumed?: string | null
           context?: string | null
           created_at?: string
@@ -769,6 +934,7 @@ export type Database = {
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
+          innovation?: string | null
           last_activity_type?: string | null
           last_contacted_date?: string | null
           last_touch_channel?: string | null
@@ -778,16 +944,21 @@ export type Database = {
           next_action_date?: string | null
           next_activity_date?: string | null
           objection?: string | null
+          objective?: string | null
           pain_points?: string | null
           probability?: number | null
           qualification_method?: string | null
           rd_annual_budget?: number | null
           source_medium?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
+          tech_lead?: string | null
+          technical_challenges?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          base_year?: number | null
+          classification?: string | null
           content_consumed?: string | null
           context?: string | null
           created_at?: string
@@ -811,6 +982,7 @@ export type Database = {
           has_timeline?: boolean
           icp_score?: number | null
           id?: string
+          innovation?: string | null
           last_activity_type?: string | null
           last_contacted_date?: string | null
           last_touch_channel?: string | null
@@ -820,12 +992,15 @@ export type Database = {
           next_action_date?: string | null
           next_activity_date?: string | null
           objection?: string | null
+          objective?: string | null
           pain_points?: string | null
           probability?: number | null
           qualification_method?: string | null
           rd_annual_budget?: number | null
           source_medium?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
+          tech_lead?: string | null
+          technical_challenges?: string | null
           updated_at?: string
           user_id?: string
         }

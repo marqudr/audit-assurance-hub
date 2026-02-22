@@ -58,7 +58,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         source_medium: project.source_medium || "",
         first_touch_channel: project.first_touch_channel || "",
         last_touch_channel: project.last_touch_channel || "",
-        estimated_cac: project.estimated_cac ? formatBRL(String(Math.round(project.estimated_cac * 100))) : "",
+        estimated_cac: project.estimated_cac ?? 0,
         icp_score: project.icp_score ?? 0,
         pain_points: project.pain_points || "",
         context: project.context || "",
@@ -69,9 +69,9 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         last_contacted_date: project.last_contacted_date ? project.last_contacted_date : undefined,
         last_activity_type: project.last_activity_type || "",
         next_activity_date: project.next_activity_date ? project.next_activity_date : undefined,
-        estimated_ltv: project.estimated_ltv ? formatBRL(String(Math.round(project.estimated_ltv * 100))) : "",
+        estimated_ltv: project.estimated_ltv ?? 0,
         probability: project.probability ?? 50,
-        deal_value: project.deal_value ? formatBRL(String(Math.round(project.deal_value * 100))) : "",
+        deal_value: project.deal_value ?? 0,
         expected_close_date: project.expected_close_date ? project.expected_close_date : undefined,
         // Frascati fields
         frascati_novidade: project.frascati_novidade ?? false,
@@ -84,7 +84,7 @@ export function ProjectDetailSheet({ project, open, onOpenChange, onOpenCompany 
         innovation: project.innovation || "",
         technical_challenges: project.technical_challenges || "",
         tech_lead: project.tech_lead || "",
-        base_year: project.base_year ? String(project.base_year) : "",
+        base_year: project.base_year ?? undefined,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
